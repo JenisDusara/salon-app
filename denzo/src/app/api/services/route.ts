@@ -10,14 +10,17 @@ export async function GET() {
       id: s.id,
       name: s.name,
       basePrice: Number(s.basePrice),
-    }))
+    })),
   );
 }
 
 export async function POST(request: Request) {
   const { name, basePrice } = await request.json();
   if (!name || basePrice === undefined)
-    return NextResponse.json({ error: "Name and basePrice required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Name and basePrice required" },
+      { status: 400 },
+    );
   try {
     const service = await prisma.service.create({
       data: { name, basePrice },
@@ -28,9 +31,12 @@ export async function POST(request: Request) {
         name: service.name,
         basePrice: Number(service.basePrice),
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch {
-    return NextResponse.json({ error: "Failed to create service" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Failed to create service" },
+      { status: 400 },
+    );
   }
 }
