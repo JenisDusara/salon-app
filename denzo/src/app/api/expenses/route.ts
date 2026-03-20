@@ -12,14 +12,17 @@ export async function GET() {
       amount: Number(e.amount),
       description: e.description,
       date: e.date.toISOString(),
-    }))
+    })),
   );
 }
 
 export async function POST(request: Request) {
   const { category, amount, description, date } = await request.json();
   if (!category || amount === undefined)
-    return NextResponse.json({ error: "Category and amount required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Category and amount required" },
+      { status: 400 },
+    );
 
   try {
     const expense = await prisma.expense.create({
@@ -38,9 +41,12 @@ export async function POST(request: Request) {
         description: expense.description,
         date: expense.date.toISOString(),
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch {
-    return NextResponse.json({ error: "Failed to create expense" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Failed to create expense" },
+      { status: 400 },
+    );
   }
 }
