@@ -10,7 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -36,6 +36,10 @@ export function EmployeesClient({
 }) {
   const router = useRouter();
   const [employees, setEmployees] = useState(initialEmployees);
+
+  useEffect(() => {
+    setEmployees(initialEmployees);
+  }, [initialEmployees]);
   const [showForm, setShowForm] = useState(false);
   const [editEmployee, setEditEmployee] = useState<Employee | null>(null);
   const [saving, setSaving] = useState(false);
