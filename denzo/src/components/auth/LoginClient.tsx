@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Scissors, Eye, EyeOff, Lock, User } from "lucide-react";
+import { Eye, EyeOff, Lock, Scissors, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export function LoginClient() {
   const router = useRouter();
@@ -39,7 +39,10 @@ export function LoginClient() {
   return (
     <div
       className="min-h-screen flex items-center justify-center p-4"
-      style={{ background: "linear-gradient(135deg, #0c1220 0%, #0f172a 50%, #1e1b4b 100%)" }}
+      style={{
+        background:
+          "linear-gradient(135deg, #0c1220 0%, #0f172a 50%, #1e1b4b 100%)",
+      }}
     >
       {/* Background decoration */}
       <div
@@ -63,7 +66,8 @@ export function LoginClient() {
             background: "rgba(15, 23, 42, 0.8)",
             backdropFilter: "blur(20px)",
             border: "1px solid rgba(99, 102, 241, 0.2)",
-            boxShadow: "0 25px 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)",
+            boxShadow:
+              "0 25px 50px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)",
           }}
         >
           {/* Logo */}
@@ -71,9 +75,16 @@ export function LoginClient() {
             <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.15, duration: 0.4, type: "spring", stiffness: 200 }}
+              transition={{
+                delay: 0.15,
+                duration: 0.4,
+                type: "spring",
+                stiffness: 200,
+              }}
               className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-              style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
+              style={{
+                background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+              }}
             >
               <Scissors size={28} color="white" />
             </motion.div>
@@ -83,7 +94,9 @@ export function LoginClient() {
               transition={{ delay: 0.25 }}
               className="text-center"
             >
-              <h1 className="text-2xl font-bold text-white tracking-wide">DENZO</h1>
+              <h1 className="text-2xl font-bold text-white tracking-wide">
+                DENZO
+              </h1>
               <p className="text-sm mt-1" style={{ color: "#6b7280" }}>
                 Salon Management Suite
               </p>
@@ -100,7 +113,10 @@ export function LoginClient() {
           >
             {/* Username */}
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: "#94a3b8" }}>
+              <label
+                className="block text-xs font-medium mb-1.5"
+                style={{ color: "#94a3b8" }}
+              >
                 Username
               </label>
               <div className="relative">
@@ -112,9 +128,10 @@ export function LoginClient() {
                 <input
                   type="text"
                   value={form.username}
-                  onChange={(e) => setForm({ ...form, username: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, username: e.target.value })
+                  }
                   placeholder="Enter username"
-                  autoFocus
                   autoComplete="username"
                   className="w-full h-11 rounded-xl pl-10 pr-4 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   style={{
@@ -127,7 +144,10 @@ export function LoginClient() {
 
             {/* Password */}
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: "#94a3b8" }}>
+              <label
+                className="block text-xs font-medium mb-1.5"
+                style={{ color: "#94a3b8" }}
+              >
                 Password
               </label>
               <div className="relative">
@@ -139,7 +159,9 @@ export function LoginClient() {
                 <input
                   type={showPassword ? "text" : "password"}
                   value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, password: e.target.value })
+                  }
                   placeholder="Enter password"
                   autoComplete="current-password"
                   className="w-full h-11 rounded-xl pl-10 pr-11 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -165,7 +187,11 @@ export function LoginClient() {
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="rounded-lg px-3 py-2.5 text-xs font-medium"
-                style={{ background: "rgba(239, 68, 68, 0.1)", color: "#fca5a5", border: "1px solid rgba(239,68,68,0.2)" }}
+                style={{
+                  background: "rgba(239, 68, 68, 0.1)",
+                  color: "#fca5a5",
+                  border: "1px solid rgba(239,68,68,0.2)",
+                }}
               >
                 {error}
               </motion.div>
@@ -186,9 +212,7 @@ export function LoginClient() {
             >
               {loading ? (
                 <>
-                  <span
-                    className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"
-                  />
+                  <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                   Signing in...
                 </>
               ) : (
@@ -198,7 +222,10 @@ export function LoginClient() {
           </motion.form>
 
           {/* Footer */}
-          <p className="text-center text-[11px] mt-6" style={{ color: "#374151" }}>
+          <p
+            className="text-center text-[11px] mt-6"
+            style={{ color: "#374151" }}
+          >
             Internal access only · DENZO Management Suite
           </p>
         </div>
