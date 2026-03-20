@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
 import { EmployeesClient } from "@/components/employees/EmployeesClient";
+import { prisma } from "@/lib/prisma";
 
 export default async function EmployeesPage() {
   const employees = await prisma.employee.findMany({ orderBy: { id: "asc" } });
