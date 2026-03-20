@@ -15,7 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "DENZO | Salon Management Suite",
-  description: "DENZO — Complete salon management system with billing, memberships, and analytics",
+  description:
+    "DENZO — Complete salon management system with billing, memberships, and analytics",
 };
 
 export default function RootLayout({
