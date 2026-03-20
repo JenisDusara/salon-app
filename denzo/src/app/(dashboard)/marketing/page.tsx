@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
 import { MarketingClient } from "@/components/marketing/MarketingClient";
+import { prisma } from "@/lib/prisma";
 
 export default async function MarketingPage() {
   const [customers, campaigns] = await Promise.all([
