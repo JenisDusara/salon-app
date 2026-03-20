@@ -3,11 +3,11 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   _req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const numId = parseInt(id);
-  if (isNaN(numId))
+  const numId = parseInt(id, 10);
+  if (Number.isNaN(numId))
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
 
   const bill = await prisma.bill.findUnique({
