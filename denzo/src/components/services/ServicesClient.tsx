@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { PenLine, Plus, Scissors, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -35,6 +35,10 @@ export function ServicesClient({
 }) {
   const router = useRouter();
   const [services, setServices] = useState(initialServices);
+
+  useEffect(() => {
+    setServices(initialServices);
+  }, [initialServices]);
   const [showForm, setShowForm] = useState(false);
   const [editService, setEditService] = useState<Service | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
