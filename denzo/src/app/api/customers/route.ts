@@ -14,14 +14,17 @@ export async function GET() {
       email: c.email,
       createdAt: c.createdAt.toISOString(),
       totalVisits: c._count.bills,
-    }))
+    })),
   );
 }
 
 export async function POST(request: Request) {
   const { name, phone, email } = await request.json();
   if (!name || !phone)
-    return NextResponse.json({ error: "Name and phone required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Name and phone required" },
+      { status: 400 },
+    );
   try {
     const customer = await prisma.customer.create({
       data: { name, phone, email: email || null },
@@ -35,9 +38,12 @@ export async function POST(request: Request) {
         createdAt: customer.createdAt.toISOString(),
         totalVisits: 0,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch {
-    return NextResponse.json({ error: "Phone number already exists" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Phone number already exists" },
+      { status: 400 },
+    );
   }
 }
