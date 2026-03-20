@@ -1,46 +1,71 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
+import { ChevronDown, Plus, Receipt, Search, UserPlus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Search, Plus, X, Receipt, ChevronDown, UserPlus } from "lucide-react";
-import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageTransition } from "@/components/ui/PageTransition";
-import { formatDate, formatCurrency } from "@/lib/utils";
-import type { Customer, Service, Employee, Bill } from "@/types";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import type { Bill, Customer, Employee, Service } from "@/types";
 
-interface LineItem { _key: string; serviceId: number; employeeId: number; price: number; }
+interface LineItem {
+  _key: string;
+  serviceId: number;
+  employeeId: number;
+  price: number;
+}
 
-export function BillingClient({ services, employees, recentBills: initialBills, allCustomers }: {
-  services: Service[]; employees: Employee[]; recentBills: Bill[]; allCustomers: Customer[];
+export function BillingClient({
+  services,
+  employees,
+  recentBills: initialBills,
+  allCustomers,
+}: {
+  services: Service[];
+  employees: Employee[];
+  recentBills: Bill[];
+  allCustomers: Customer[];
 }) {
   const router = useRouter();
   const [bills, setBills] = useState(initialBills);
   const [customerQuery, setCustomerQuery] = useState("");
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null,
+  );
   const [suggestions, setSuggestions] = useState<Customer[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [newCustomerMode, setNewCustomerMode] = useState(false);
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
-  const [lineItems, setLineItems] = useState<LineItem[]>([{ _key: "0", serviceId: 0, employeeId: 0, price: 0 }]);
+  const [lineItems, setLineItems] = useState<LineItem[]>([
+    { _key: "0", serviceId: 0, employeeId: 0, price: 0 },
+  ]);
   const [submitting, setSubmitting] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Filter suggestions
   useEffect(() => {
-    if (!customerQuery.trim()) { setSuggestions([]); return; }
+    if (!customerQuery.trim()) {
+      setSuggestions([]);
+      return;
+    }
     const q = customerQuery.toLowerCase();
-    setSuggestions(allCustomers.filter((c) => c.name.toLowerCase().includes(q) || c.phone.includes(q)).slice(0, 6));
+    setSuggestions(
+      allCustomers
+        .filter((c) => c.name.toLowerCase().includes(q) || c.phone.includes(q))
+        .slice(0, 6),
+    );
   }, [customerQuery, allCustomers]);
 
   // Close suggestions on outside click
   useEffect(() => {
     function handler(e: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setShowSuggestions(false);
+      if (searchRef.current && !searchRef.current.contains(e.target as Node))
+        setShowSuggestions(false);
     }
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -54,10 +79,19 @@ export function BillingClient({ services, employees, recentBills: initialBills, 
     setNewCustomerMode(false);
   }
 
-  function clearCustomer() { setSelectedCustomer(null); setCustomerQuery(""); setNewCustomerMode(false); setNewName(""); setNewPhone(""); }
+  function clearCustomer() {
+    setSelectedCustomer(null);
+    setCustomerQuery("");
+    setNewCustomerMode(false);
+    setNewName("");
+    setNewPhone("");
+  }
 
   function addLineItem() {
-    setLineItems((prev) => [...prev, { _key: Date.now().toString(), serviceId: 0, employeeId: 0, price: 0 }]);
+    setLineItems((prev) => [
+      ...prev,
+      { _key: Date.now().toString(), serviceId: 0, employeeId: 0, price: 0 },
+    ]);
   }
 
   function removeLineItem(key: string) {
@@ -66,21 +100,33 @@ export function BillingClient({ services, employees, recentBills: initialBills, 
   }
 
   function updateLineItem(key: string, field: keyof LineItem, value: number) {
-    setLineItems((prev) => prev.map((item) => {
-      if (item._key !== key) return item;
-      if (field === "serviceId") {
-        const svc = services.find((s) => s.id === value);
-        return { ...item, serviceId: value, price: svc ? svc.basePrice : item.price };
-      }
-      return { ...item, [field]: value };
-    }));
+    setLineItems((prev) =>
+      prev.map((item) => {
+        if (item._key !== key) return item;
+        if (field === "serviceId") {
+          const svc = services.find((s) => s.id === value);
+          return {
+            ...item,
+            serviceId: value,
+            price: svc ? svc.basePrice : item.price,
+          };
+        }
+        return { ...item, [field]: value };
+      }),
+    );
   }
 
   const total = lineItems.reduce((sum, i) => sum + (Number(i.price) || 0), 0);
-  const isValid = (selectedCustomer || (newCustomerMode && newName.trim() && newPhone.trim())) && lineItems.every((i) => i.serviceId && i.employeeId);
+  const isValid =
+    (selectedCustomer ||
+      (newCustomerMode && newName.trim() && newPhone.trim())) &&
+    lineItems.every((i) => i.serviceId && i.employeeId);
 
   async function handleSubmit() {
-    if (!isValid) { toast.error("Please fill all required fields"); return; }
+    if (!isValid) {
+      toast.error("Please fill all required fields");
+      return;
+    }
     setSubmitting(true);
     try {
       let customerId = selectedCustomer?.id;
@@ -88,22 +134,34 @@ export function BillingClient({ services, employees, recentBills: initialBills, 
       // Create new customer if needed
       if (newCustomerMode) {
         const res = await fetch("/api/customers", {
-          method: "POST", headers: { "Content-Type": "application/json" },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: newName, phone: newPhone }),
         });
-        if (!res.ok) { const e = await res.json(); throw new Error(e.error ?? "Failed to create customer"); }
+        if (!res.ok) {
+          const e = await res.json();
+          throw new Error(e.error ?? "Failed to create customer");
+        }
         const created = await res.json();
         customerId = created.id;
       }
 
       const res = await fetch("/api/bills", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerId,
-          items: lineItems.map((i) => ({ serviceId: i.serviceId, employeeId: i.employeeId, price: Number(i.price) })),
+          items: lineItems.map((i) => ({
+            serviceId: i.serviceId,
+            employeeId: i.employeeId,
+            price: Number(i.price),
+          })),
         }),
       });
-      if (!res.ok) { const e = await res.json(); throw new Error(e.error ?? "Failed"); }
+      if (!res.ok) {
+        const e = await res.json();
+        throw new Error(e.error ?? "Failed");
+      }
       const newBill = await res.json();
 
       toast.success("Bill created! SMS sent ✓");
@@ -111,11 +169,15 @@ export function BillingClient({ services, employees, recentBills: initialBills, 
 
       // Reset form
       clearCustomer();
-      setLineItems([{ _key: Date.now().toString(), serviceId: 0, employeeId: 0, price: 0 }]);
+      setLineItems([
+        { _key: Date.now().toString(), serviceId: 0, employeeId: 0, price: 0 },
+      ]);
       router.refresh();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to create bill");
-    } finally { setSubmitting(false); }
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -125,12 +187,16 @@ export function BillingClient({ services, employees, recentBills: initialBills, 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
             <Receipt size={16} className="text-indigo-500" />
-            <h2 className="text-[15px] font-semibold text-slate-800">Create New Bill</h2>
+            <h2 className="text-[15px] font-semibold text-slate-800">
+              Create New Bill
+            </h2>
           </div>
           <div className="p-6 space-y-5">
             {/* Customer Search */}
             <div>
-              <label className="text-[12px] font-medium text-slate-600 mb-1.5 block">Customer *</label>
+              <label className="text-[12px] font-medium text-slate-600 mb-1.5 block">
+                Customer *
+              </label>
               {selectedCustomer ? (
                 <div className="flex items-center justify-between bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3">
                   <div className="flex items-center gap-3">
@@ -138,29 +204,63 @@ export function BillingClient({ services, employees, recentBills: initialBills, 
                       {selectedCustomer.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-[13px] font-semibold text-indigo-800">{selectedCustomer.name}</p>
-                      <p className="text-[11px] text-indigo-600">{selectedCustomer.phone}</p>
+                      <p className="text-[13px] font-semibold text-indigo-800">
+                        {selectedCustomer.name}
+                      </p>
+                      <p className="text-[11px] text-indigo-600">
+                        {selectedCustomer.phone}
+                      </p>
                     </div>
                   </div>
-                  <button type="button" onClick={clearCustomer} className="text-indigo-400 hover:text-indigo-600 transition-colors"><X size={15} /></button>
+                  <button
+                    type="button"
+                    onClick={clearCustomer}
+                    className="text-indigo-400 hover:text-indigo-600 transition-colors"
+                  >
+                    <X size={15} />
+                  </button>
                 </div>
               ) : newCustomerMode ? (
                 <div className="border border-indigo-200 rounded-xl p-4 bg-indigo-50/40 space-y-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-[12px] font-semibold text-indigo-700 flex items-center gap-1.5"><UserPlus size={13} />New Customer</p>
-                    <button type="button" onClick={() => setNewCustomerMode(false)} className="text-slate-400 hover:text-slate-600"><X size={13} /></button>
+                    <p className="text-[12px] font-semibold text-indigo-700 flex items-center gap-1.5">
+                      <UserPlus size={13} />
+                      New Customer
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setNewCustomerMode(false)}
+                      className="text-slate-400 hover:text-slate-600"
+                    >
+                      <X size={13} />
+                    </button>
                   </div>
-                  <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Full Name *"
-                    className="w-full h-8 rounded-lg border border-slate-200 bg-white px-3 text-[12px] focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                  <input value={newPhone} onChange={(e) => setNewPhone(e.target.value)} placeholder="Phone Number *" maxLength={10}
-                    className="w-full h-8 rounded-lg border border-slate-200 bg-white px-3 text-[12px] focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                  <input
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    placeholder="Full Name *"
+                    className="w-full h-8 rounded-lg border border-slate-200 bg-white px-3 text-[12px] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <input
+                    value={newPhone}
+                    onChange={(e) => setNewPhone(e.target.value)}
+                    placeholder="Phone Number *"
+                    maxLength={10}
+                    className="w-full h-8 rounded-lg border border-slate-200 bg-white px-3 text-[12px] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
                 </div>
               ) : (
                 <div ref={searchRef} className="relative">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Search
+                    size={14}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
                   <input
                     value={customerQuery}
-                    onChange={(e) => { setCustomerQuery(e.target.value); setShowSuggestions(true); }}
+                    onChange={(e) => {
+                      setCustomerQuery(e.target.value);
+                      setShowSuggestions(true);
+                    }}
                     onFocus={() => setShowSuggestions(true)}
                     placeholder="Search by phone or name..."
                     className="w-full h-9 pl-8 pr-3 rounded-lg border border-slate-200 bg-slate-50 text-[13px] text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
@@ -170,30 +270,56 @@ export function BillingClient({ services, employees, recentBills: initialBills, 
                       {suggestions.length > 0 ? (
                         <>
                           {suggestions.map((c) => (
-                            <button key={c.id} type="button" onClick={() => selectCustomer(c)}
-                              className="w-full text-left flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 transition-colors">
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => selectCustomer(c)}
+                              className="w-full text-left flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 transition-colors"
+                            >
                               <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-[12px] font-bold flex-shrink-0">
                                 {c.name.charAt(0).toUpperCase()}
                               </div>
                               <div>
-                                <p className="text-[12px] font-semibold text-slate-800">{c.name}</p>
-                                <p className="text-[11px] text-slate-500">{c.phone}</p>
+                                <p className="text-[12px] font-semibold text-slate-800">
+                                  {c.name}
+                                </p>
+                                <p className="text-[11px] text-slate-500">
+                                  {c.phone}
+                                </p>
                               </div>
                             </button>
                           ))}
                           <div className="border-t border-slate-100 px-4 py-2">
-                            <button type="button" onClick={() => { setNewCustomerMode(true); setShowSuggestions(false); setNewPhone(customerQuery); }}
-                              className="text-[12px] text-indigo-600 font-medium flex items-center gap-1.5 hover:text-indigo-800 transition-colors">
-                              <UserPlus size={12} />Add &quot;{customerQuery}&quot; as new customer
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setNewCustomerMode(true);
+                                setShowSuggestions(false);
+                                setNewPhone(customerQuery);
+                              }}
+                              className="text-[12px] text-indigo-600 font-medium flex items-center gap-1.5 hover:text-indigo-800 transition-colors"
+                            >
+                              <UserPlus size={12} />
+                              Add &quot;{customerQuery}&quot; as new customer
                             </button>
                           </div>
                         </>
                       ) : (
                         <div className="p-3">
-                          <p className="text-[12px] text-slate-500 mb-2">No customers found</p>
-                          <button type="button" onClick={() => { setNewCustomerMode(true); setShowSuggestions(false); setNewPhone(customerQuery); }}
-                            className="text-[12px] text-indigo-600 font-medium flex items-center gap-1.5 hover:text-indigo-800 transition-colors">
-                            <UserPlus size={12} />Add as new customer
+                          <p className="text-[12px] text-slate-500 mb-2">
+                            No customers found
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setNewCustomerMode(true);
+                              setShowSuggestions(false);
+                              setNewPhone(customerQuery);
+                            }}
+                            className="text-[12px] text-indigo-600 font-medium flex items-center gap-1.5 hover:text-indigo-800 transition-colors"
+                          >
+                            <UserPlus size={12} />
+                            Add as new customer
                           </button>
                         </div>
                       )}
@@ -206,38 +332,74 @@ export function BillingClient({ services, employees, recentBills: initialBills, 
             {/* Service Line Items */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-[12px] font-medium text-slate-600">Services *</label>
-                <button type="button" onClick={addLineItem} className="text-[12px] text-indigo-600 font-medium flex items-center gap-1 hover:text-indigo-800 transition-colors">
-                  <Plus size={12} />Add Service
+                <label className="text-[12px] font-medium text-slate-600">
+                  Services *
+                </label>
+                <button
+                  type="button"
+                  onClick={addLineItem}
+                  className="text-[12px] text-indigo-600 font-medium flex items-center gap-1 hover:text-indigo-800 transition-colors"
+                >
+                  <Plus size={12} />
+                  Add Service
                 </button>
               </div>
               <div className="space-y-2">
                 {lineItems.map((item) => (
-                  <div key={item._key} className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <div
+                    key={item._key}
+                    className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200"
+                  >
                     <div className="flex-1 grid grid-cols-2 gap-2">
                       {/* Service */}
                       <div className="relative">
                         <select
                           value={item.serviceId || ""}
-                          onChange={(e) => updateLineItem(item._key, "serviceId", parseInt(e.target.value))}
+                          onChange={(e) =>
+                            updateLineItem(
+                              item._key,
+                              "serviceId",
+                              parseInt(e.target.value, 10),
+                            )
+                          }
                           className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 pr-6 text-[12px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none"
                         >
                           <option value="">Service</option>
-                          {services.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                          {services.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.name}
+                            </option>
+                          ))}
                         </select>
-                        <ChevronDown size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                        <ChevronDown
+                          size={11}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                        />
                       </div>
                       {/* Employee */}
                       <div className="relative">
                         <select
                           value={item.employeeId || ""}
-                          onChange={(e) => updateLineItem(item._key, "employeeId", parseInt(e.target.value))}
+                          onChange={(e) =>
+                            updateLineItem(
+                              item._key,
+                              "employeeId",
+                              parseInt(e.target.value, 10),
+                            )
+                          }
                           className="w-full h-8 rounded-lg border border-slate-200 bg-white px-2 pr-6 text-[12px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none"
                         >
                           <option value="">Employee</option>
-                          {employees.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
+                          {employees.map((e) => (
+                            <option key={e.id} value={e.id}>
+                              {e.name}
+                            </option>
+                          ))}
                         </select>
-                        <ChevronDown size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                        <ChevronDown
+                          size={11}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                        />
                       </div>
                     </div>
                     {/* Price */}
@@ -246,14 +408,24 @@ export function BillingClient({ services, employees, recentBills: initialBills, 
                       <input
                         type="number"
                         value={item.price || ""}
-                        onChange={(e) => updateLineItem(item._key, "price", Number(e.target.value))}
+                        onChange={(e) =>
+                          updateLineItem(
+                            item._key,
+                            "price",
+                            Number(e.target.value),
+                          )
+                        }
                         className="flex-1 min-w-0 text-[12px] text-slate-700 focus:outline-none bg-transparent"
                         min="0"
                         placeholder="0"
                       />
                     </div>
                     {lineItems.length > 1 && (
-                      <button type="button" onClick={() => removeLineItem(item._key)} className="text-slate-400 hover:text-rose-500 transition-colors flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => removeLineItem(item._key)}
+                        className="text-slate-400 hover:text-rose-500 transition-colors flex-shrink-0"
+                      >
                         <X size={14} />
                       </button>
                     )}
@@ -265,11 +437,23 @@ export function BillingClient({ services, employees, recentBills: initialBills, 
             {/* Total + Submit */}
             <div className="border-t border-slate-100 pt-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[13px] font-medium text-slate-600">Total Amount</span>
-                <span className="text-[22px] font-bold text-slate-800">{formatCurrency(total)}</span>
+                <span className="text-[13px] font-medium text-slate-600">
+                  Total Amount
+                </span>
+                <span className="text-[22px] font-bold text-slate-800">
+                  {formatCurrency(total)}
+                </span>
               </div>
-              <Button variant="primary" size="lg" className="w-full" onClick={handleSubmit} loading={submitting} disabled={!isValid}>
-                <Receipt size={15} />Create Bill &amp; Send SMS
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full"
+                onClick={handleSubmit}
+                loading={submitting}
+                disabled={!isValid}
+              >
+                <Receipt size={15} />
+                Create Bill &amp; Send SMS
               </Button>
             </div>
           </div>
@@ -278,12 +462,20 @@ export function BillingClient({ services, employees, recentBills: initialBills, 
         {/* RIGHT - Recent Bills */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-            <h2 className="text-[15px] font-semibold text-slate-800">Recent Bills</h2>
-            <span className="text-[11px] font-semibold bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">{bills.length}</span>
+            <h2 className="text-[15px] font-semibold text-slate-800">
+              Recent Bills
+            </h2>
+            <span className="text-[11px] font-semibold bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
+              {bills.length}
+            </span>
           </div>
           <div className="p-4 space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto">
             {bills.length === 0 ? (
-              <EmptyState icon={<Receipt size={22} />} title="No bills yet" description="Create your first bill on the left" />
+              <EmptyState
+                icon={<Receipt size={22} />}
+                title="No bills yet"
+                description="Create your first bill on the left"
+              />
             ) : (
               bills.map((bill, idx) => (
                 <motion.div
@@ -295,22 +487,40 @@ export function BillingClient({ services, employees, recentBills: initialBills, 
                 >
                   <div className="flex items-center justify-between mb-2.5">
                     <div>
-                      <p className="text-[13px] font-semibold text-slate-800">{bill.customerName}</p>
-                      <p className="text-[11px] text-slate-400">{formatDate(bill.date)}</p>
+                      <p className="text-[13px] font-semibold text-slate-800">
+                        {bill.customerName}
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        {formatDate(bill.date)}
+                      </p>
                     </div>
-                    <p className="text-[14px] font-bold text-slate-800">{formatCurrency(bill.totalAmount)}</p>
+                    <p className="text-[14px] font-bold text-slate-800">
+                      {formatCurrency(bill.totalAmount)}
+                    </p>
                   </div>
                   <div className="space-y-1">
                     {bill.items.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between">
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between"
+                      >
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <span className="text-[11px] text-slate-700 truncate">{item.serviceName}</span>
-                          <span className="text-[10px] text-slate-400 flex-shrink-0">· {item.employeeName}</span>
+                          <span className="text-[11px] text-slate-700 truncate">
+                            {item.serviceName}
+                          </span>
+                          <span className="text-[10px] text-slate-400 flex-shrink-0">
+                            · {item.employeeName}
+                          </span>
                         </div>
-                        {item.isMembershipService
-                          ? <Badge variant="free" className="flex-shrink-0">FREE</Badge>
-                          : <span className="text-[11px] font-medium text-slate-600 flex-shrink-0">₹{item.price}</span>
-                        }
+                        {item.isMembershipService ? (
+                          <Badge variant="free" className="flex-shrink-0">
+                            FREE
+                          </Badge>
+                        ) : (
+                          <span className="text-[11px] font-medium text-slate-600 flex-shrink-0">
+                            ₹{item.price}
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>
