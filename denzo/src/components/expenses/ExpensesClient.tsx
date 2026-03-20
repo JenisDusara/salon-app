@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { PenLine, Plus, Trash2, TrendingDown } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -23,6 +23,10 @@ export function ExpensesClient({
 }) {
   const router = useRouter();
   const [expenses, setExpenses] = useState(initialExpenses);
+
+  useEffect(() => {
+    setExpenses(initialExpenses);
+  }, [initialExpenses]);
   const [showForm, setShowForm] = useState(false);
   const [editExpense, setEditExpense] = useState<Expense | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
