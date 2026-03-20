@@ -1,19 +1,19 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
+  CreditCard,
   LayoutDashboard,
-  Users,
-  UserCheck,
+  LogOut,
+  Megaphone,
   Receipt,
   Scissors,
-  CreditCard,
   TrendingDown,
-  Megaphone,
-  LogOut,
+  UserCheck,
+  Users,
 } from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -37,7 +37,11 @@ const containerVariants = {
 
 const itemVariants = {
   hidden: { opacity: 0, x: -16 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.25, ease: "easeOut" as const } },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.25, ease: "easeOut" as const },
+  },
 };
 
 export function Sidebar() {
@@ -65,7 +69,10 @@ export function Sidebar() {
       style={{ background: "var(--sidebar)" }}
     >
       {/* Logo */}
-      <div className="px-5 py-6 border-b" style={{ borderColor: "var(--sidebar-border)" }}>
+      <div
+        className="px-5 py-6 border-b"
+        style={{ borderColor: "var(--sidebar-border)" }}
+      >
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -79,7 +86,9 @@ export function Sidebar() {
             <Scissors size={18} color="white" />
           </div>
           <div>
-            <p className="text-white font-bold text-[16px] leading-tight tracking-widest">DENZO</p>
+            <p className="text-white font-bold text-[16px] leading-tight tracking-widest">
+              DENZO
+            </p>
             <p className="text-[11px]" style={{ color: "#6b7280" }}>
               Management Suite
             </p>
@@ -102,21 +111,29 @@ export function Sidebar() {
           className="space-y-0.5"
         >
           {navItems.map(({ href, icon: Icon, label }) => {
-            const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
+            const isActive =
+              href === "/" ? pathname === "/" : pathname.startsWith(href);
             return (
               <motion.li key={href} variants={itemVariants}>
                 <Link
                   href={href}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 relative group"
                   style={{
-                    background: isActive ? "rgba(99, 102, 241, 0.15)" : "transparent",
+                    background: isActive
+                      ? "rgba(99, 102, 241, 0.15)"
+                      : "transparent",
                     color: isActive ? "#e2e8f0" : "#6b7280",
-                    borderLeft: isActive ? "3px solid #6366f1" : "3px solid transparent",
+                    borderLeft: isActive
+                      ? "3px solid #6366f1"
+                      : "3px solid transparent",
                   }}
                 >
                   <Icon
                     size={17}
-                    style={{ color: isActive ? "#818cf8" : "#6b7280", flexShrink: 0 }}
+                    style={{
+                      color: isActive ? "#818cf8" : "#6b7280",
+                      flexShrink: 0,
+                    }}
                   />
                   <span className="text-[13px] font-medium">{label}</span>
                   {isActive && (
@@ -134,7 +151,10 @@ export function Sidebar() {
       </nav>
 
       {/* User + Logout */}
-      <div className="px-4 py-4 border-t" style={{ borderColor: "var(--sidebar-border)" }}>
+      <div
+        className="px-4 py-4 border-t"
+        style={{ borderColor: "var(--sidebar-border)" }}
+      >
         <div className="flex items-center gap-3">
           <div className="relative flex-shrink-0">
             <div
@@ -149,7 +169,9 @@ export function Sidebar() {
             />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-medium text-slate-200 truncate">Admin</p>
+            <p className="text-[13px] font-medium text-slate-200 truncate">
+              Admin
+            </p>
             <p className="text-[11px] truncate" style={{ color: "#6b7280" }}>
               Owner · DENZO
             </p>
