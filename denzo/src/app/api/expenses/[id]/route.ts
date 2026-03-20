@@ -3,11 +3,11 @@ import { prisma } from "@/lib/prisma";
 
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const numId = parseInt(id);
-  if (isNaN(numId))
+  const numId = parseInt(id, 10);
+  if (Number.isNaN(numId))
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
 
   const body = await request.json();
@@ -19,7 +19,8 @@ export async function PUT(
   } = {};
   if (body.category !== undefined) data.category = body.category;
   if (body.amount !== undefined) data.amount = body.amount;
-  if (body.description !== undefined) data.description = body.description || null;
+  if (body.description !== undefined)
+    data.description = body.description || null;
   if (body.date !== undefined) data.date = new Date(body.date);
 
   try {
@@ -41,11 +42,11 @@ export async function PUT(
 
 export async function DELETE(
   _req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const numId = parseInt(id);
-  if (isNaN(numId))
+  const numId = parseInt(id, 10);
+  if (Number.isNaN(numId))
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
 
   try {
