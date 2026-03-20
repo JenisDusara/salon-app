@@ -31,7 +31,7 @@ export async function GET() {
         price: Number(item.price),
         isMembershipService: item.isMembershipService,
       })),
-    }))
+    })),
   );
 }
 
@@ -44,10 +44,15 @@ export async function POST(request: Request) {
   };
 
   if (!customerId || !items || !Array.isArray(items) || items.length === 0)
-    return NextResponse.json({ error: "customerId and items are required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "customerId and items are required" },
+      { status: 400 },
+    );
 
   // 1. Find customer
-  const customer = await prisma.customer.findUnique({ where: { id: customerId } });
+  const customer = await prisma.customer.findUnique({
+    where: { id: customerId },
+  });
   if (!customer)
     return NextResponse.json({ error: "Customer not found" }, { status: 404 });
 
@@ -87,7 +92,7 @@ export async function POST(request: Request) {
 
     if (membership) {
       const planService = membership.plan.planServices.find(
-        (ps) => ps.serviceId === item.serviceId
+        (ps) => ps.serviceId === item.serviceId,
       );
 
       if (planService) {
@@ -115,7 +120,9 @@ export async function POST(request: Request) {
       price = item.price;
     } else if (!isMembershipService) {
       // Fall back to service basePrice
-      const service = await prisma.service.findUnique({ where: { id: item.serviceId } });
+      const service = await prisma.service.findUnique({
+        where: { id: item.serviceId },
+      });
       price = service ? Number(service.basePrice) : 0;
     }
 
@@ -160,10 +167,14 @@ export async function POST(request: Request) {
 
     // 5. Create MembershipUsage records for membership services
     if (membership) {
-      const membershipItems = processedItems.filter((i) => i.isMembershipService);
+      const membershipItems = processedItems.filter(
+        (i) => i.isMembershipService,
+      );
       for (const mi of membershipItems) {
         // Find the bill item that was just created for this service
-        const billItem = newBill.items.find((it) => it.serviceId === mi.serviceId && it.isMembershipService);
+        const billItem = newBill.items.find(
+          (it) => it.serviceId === mi.serviceId && it.isMembershipService,
+        );
         if (!billItem) continue;
         await tx.membershipUsage.create({
           data: {
@@ -196,7 +207,7 @@ export async function POST(request: Request) {
 
   // 7. SMS placeholder
   console.log(
-    `[SMS] Bill #${bill.id} for customer ${customer.name} (${customer.phone}): Total ₹${totalAmount}. Thank you for visiting!`
+    `[SMS] Bill #${bill.id} for customer ${customer.name} (${customer.phone}): Total ₹${totalAmount}. Thank you for visiting!`,
   );
 
   return NextResponse.json(
@@ -215,6 +226,6 @@ export async function POST(request: Request) {
         isMembershipService: item.isMembershipService,
       })),
     },
-    { status: 201 }
+    { status: 201 },
   );
 }
