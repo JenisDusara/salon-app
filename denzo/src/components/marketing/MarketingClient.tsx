@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Clock, MessageSquare, Send, Users } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -22,6 +22,10 @@ export function MarketingClient({
 }: MarketingClientProps) {
   const [message, setMessage] = useState("");
   const [campaigns, setCampaigns] = useState<SmsCampaign[]>(initialCampaigns);
+
+  useEffect(() => {
+    setCampaigns(initialCampaigns);
+  }, [initialCampaigns]);
   const [sending, setSending] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [selectedTemplateIdx, setSelectedTemplateIdx] = useState<number | null>(
