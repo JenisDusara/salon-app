@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { CreditCard, Plus, Settings, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -34,6 +34,14 @@ export function MembershipsClient({
   );
   const [memberships, _setMemberships] = useState(initialMemberships);
   const [plans, setPlans] = useState(initialPlans);
+
+  useEffect(() => {
+    _setMemberships(initialMemberships);
+  }, [initialMemberships]);
+
+  useEffect(() => {
+    setPlans(initialPlans);
+  }, [initialPlans]);
   const [showAssign, setShowAssign] = useState(false);
   const [showPlanForm, setShowPlanForm] = useState(false);
   const [editPlan, setEditPlan] = useState<MembershipPlan | null>(null);
