@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { ExpensesClient } from "@/components/expenses/ExpensesClient";
 import { prisma } from "@/lib/prisma";
 import { getMonthRange, getTodayRange } from "@/lib/utils";
