@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { CustomersClient } from "@/components/customers/CustomersClient";
 import { prisma } from "@/lib/prisma";
 
