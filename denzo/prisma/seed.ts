@@ -1,10 +1,12 @@
 import "dotenv/config";
-import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import bcrypt from "bcryptjs";
+import { PrismaClient } from "../src/generated/prisma/client";
 
 async function main() {
-  const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_URL! });
+  const adapter = new PrismaNeon({
+    connectionString: process.env.DATABASE_URL!,
+  });
   const prisma = new PrismaClient({ adapter });
 
   console.log("Seeding admin credentials...");
