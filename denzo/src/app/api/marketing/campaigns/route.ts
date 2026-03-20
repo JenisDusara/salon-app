@@ -11,6 +11,6 @@ export async function GET() {
       message: c.message,
       recipientCount: c.recipientCount,
       sentAt: c.sentAt.toISOString(),
-    }))
+    })),
   );
 }
