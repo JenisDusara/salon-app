@@ -3,11 +3,11 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   _req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const numId = parseInt(id);
-  if (isNaN(numId))
+  const numId = parseInt(id, 10);
+  if (Number.isNaN(numId))
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
 
   const now = new Date();
@@ -31,10 +31,15 @@ export async function GET(
   });
 
   if (!membership)
-    return NextResponse.json({ error: "No active membership found for this customer" }, { status: 404 });
+    return NextResponse.json(
+      { error: "No active membership found for this customer" },
+      { status: 404 },
+    );
 
   const serviceUsage = membership.plan.planServices.map((ps) => {
-    const usedCount = membership.usages.filter((u) => u.serviceId === ps.serviceId).length;
+    const usedCount = membership.usages.filter(
+      (u) => u.serviceId === ps.serviceId,
+    ).length;
     return {
       serviceId: ps.serviceId,
       serviceName: ps.service.name,
