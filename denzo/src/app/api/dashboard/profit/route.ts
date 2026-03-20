@@ -8,14 +8,17 @@ export async function GET(request: Request) {
 
   if (!startDateParam || !endDateParam)
     return NextResponse.json(
-      { error: "start_date and end_date query parameters are required (YYYY-MM-DD)" },
-      { status: 400 }
+      {
+        error:
+          "start_date and end_date query parameters are required (YYYY-MM-DD)",
+      },
+      { status: 400 },
     );
 
   const startDate = new Date(`${startDateParam}T00:00:00.000Z`);
   const endDate = new Date(`${endDateParam}T23:59:59.999Z`);
 
-  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()))
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime()))
     return NextResponse.json({ error: "Invalid date format" }, { status: 400 });
 
   const [bills, expenses] = await Promise.all([
