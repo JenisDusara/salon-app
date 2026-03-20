@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { ServicesClient } from "@/components/services/ServicesClient";
 import { prisma } from "@/lib/prisma";
 
