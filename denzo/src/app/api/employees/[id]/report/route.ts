@@ -3,11 +3,11 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   _req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const numId = parseInt(id);
-  if (isNaN(numId))
+  const numId = parseInt(id, 10);
+  if (Number.isNaN(numId))
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
 
   const employee = await prisma.employee.findUnique({
@@ -30,7 +30,10 @@ export async function GET(
   });
 
   const totalServices = billItems.length;
-  const totalIncome = billItems.reduce((sum, item) => sum + Number(item.price), 0);
+  const totalIncome = billItems.reduce(
+    (sum, item) => sum + Number(item.price),
+    0,
+  );
 
   const serviceHistory = billItems.map((item) => ({
     date: item.bill.date.toISOString(),
