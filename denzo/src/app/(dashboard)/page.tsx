@@ -1,6 +1,6 @@
-import { prisma } from "@/lib/prisma";
 import { DashboardClient } from "@/components/dashboard/DashboardClient";
-import { getTodayRange, getMonthRange } from "@/lib/utils";
+import { prisma } from "@/lib/prisma";
+import { getMonthRange, getTodayRange } from "@/lib/utils";
 
 export default async function DashboardPage() {
   const { start: todayStart, end: todayEnd } = getTodayRange();
@@ -15,21 +15,47 @@ export default async function DashboardPage() {
     totalExpAgg,
     totalCustomers,
     employees,
+    todayBills,
   ] = await Promise.all([
-    prisma.bill.aggregate({ _sum: { totalAmount: true }, where: { date: { gte: todayStart, lte: todayEnd } } }),
-    prisma.bill.aggregate({ _sum: { totalAmount: true }, where: { date: { gte: monthStart, lte: monthEnd } } }),
+    prisma.bill.aggregate({
+      _sum: { totalAmount: true },
+      where: { date: { gte: todayStart, lte: todayEnd } },
+    }),
+    prisma.bill.aggregate({
+      _sum: { totalAmount: true },
+      where: { date: { gte: monthStart, lte: monthEnd } },
+    }),
     prisma.bill.aggregate({ _sum: { totalAmount: true } }),
-    prisma.expense.aggregate({ _sum: { amount: true }, where: { date: { gte: todayStart, lte: todayEnd } } }),
-    prisma.expense.aggregate({ _sum: { amount: true }, where: { date: { gte: monthStart, lte: monthEnd } } }),
+    prisma.expense.aggregate({
+      _sum: { amount: true },
+      where: { date: { gte: todayStart, lte: todayEnd } },
+    }),
+    prisma.expense.aggregate({
+      _sum: { amount: true },
+      where: { date: { gte: monthStart, lte: monthEnd } },
+    }),
     prisma.expense.aggregate({ _sum: { amount: true } }),
     prisma.customer.count(),
     prisma.employee.findMany({ where: { isActive: true } }),
+    prisma.bill.findMany({
+      where: { date: { gte: todayStart, lte: todayEnd } },
+      include: {
+        customer: { include: { membership: { include: { plan: true } } } },
+        items: {
+          where: { isMembershipService: true },
+          include: { service: true },
+        },
+      },
+    }),
   ]);
 
   const labourIncome = await Promise.all(
     employees.map(async (emp) => {
       const [incAgg, svcCount] = await Promise.all([
-        prisma.billItem.aggregate({ _sum: { price: true }, where: { employeeId: emp.id } }),
+        prisma.billItem.aggregate({
+          _sum: { price: true },
+          where: { employeeId: emp.id },
+        }),
         prisma.billItem.count({ where: { employeeId: emp.id } }),
       ]);
       return {
@@ -38,16 +64,8 @@ export default async function DashboardPage() {
         totalServices: svcCount,
         totalIncome: Number(incAgg._sum.price ?? 0),
       };
-    })
+    }),
   );
-
-  const todayBills = await prisma.bill.findMany({
-    where: { date: { gte: todayStart, lte: todayEnd } },
-    include: {
-      customer: { include: { membership: { include: { plan: true } } } },
-      items: { where: { isMembershipService: true }, include: { service: true } },
-    },
-  });
 
   const todayMembershipActivity = todayBills
     .filter((b) => b.items.length > 0)
