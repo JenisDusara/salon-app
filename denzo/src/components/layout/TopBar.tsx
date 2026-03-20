@@ -1,18 +1,24 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { getPageTitle, formatDateFull } from "@/lib/utils";
 import { Bell } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { formatDateFull, getPageTitle } from "@/lib/utils";
 
 export function TopBar() {
   const pathname = usePathname();
   const title = getPageTitle(pathname);
+  const [dateStr, setDateStr] = useState("");
+
+  useEffect(() => {
+    setDateStr(formatDateFull());
+  }, []);
 
   return (
     <header className="sticky top-0 z-30 h-[60px] bg-white border-b border-slate-200 flex items-center justify-between px-7">
       <div>
         <h1 className="text-[17px] font-semibold text-slate-800">{title}</h1>
-        <p className="text-[11px] text-slate-400">{formatDateFull()}</p>
+        <p className="text-[11px] text-slate-400 min-h-[16px]">{dateStr}</p>
       </div>
       <div className="flex items-center gap-3">
         {/* System online */}
@@ -21,7 +27,9 @@ export function TopBar() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
           </span>
-          <span className="text-[11px] font-medium text-emerald-700">System Online</span>
+          <span className="text-[11px] font-medium text-emerald-700">
+            System Online
+          </span>
         </div>
         {/* Notification bell */}
         <button
