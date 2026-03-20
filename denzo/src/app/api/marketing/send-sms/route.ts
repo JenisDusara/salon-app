@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   // 2. Log SMS for each customer
   for (const customer of customers) {
     console.log(
-      `[SMS] To: ${customer.phone} (${customer.name}) | Message: ${message}`
+      `[SMS] To: ${customer.phone} (${customer.name}) | Message: ${message}`,
     );
   }
 
