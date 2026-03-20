@@ -32,6 +32,10 @@ export function BillingClient({
 }) {
   const router = useRouter();
   const [bills, setBills] = useState(initialBills);
+
+  useEffect(() => {
+    setBills(initialBills);
+  }, [initialBills]);
   const [customerQuery, setCustomerQuery] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null,
