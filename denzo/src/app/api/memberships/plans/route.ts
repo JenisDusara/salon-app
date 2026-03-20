@@ -25,7 +25,7 @@ export async function GET() {
         serviceName: ps.service.name,
         allowedCount: ps.allowedCount,
       })),
-    }))
+    })),
   );
 }
 
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   if (!name || price === undefined || !validityDays)
     return NextResponse.json(
       { error: "name, price, and validityDays are required" },
-      { status: 400 }
+      { status: 400 },
     );
 
   try {
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
                   (s: { serviceId: number; allowedCount: number }) => ({
                     serviceId: s.serviceId,
                     allowedCount: s.allowedCount,
-                  })
+                  }),
                 ),
               }
             : undefined,
@@ -77,9 +77,12 @@ export async function POST(request: Request) {
           allowedCount: ps.allowedCount,
         })),
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch {
-    return NextResponse.json({ error: "Failed to create plan" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Failed to create plan" },
+      { status: 400 },
+    );
   }
 }
