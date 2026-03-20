@@ -1,8 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { formatCurrency } from "@/lib/utils";
 import type { ReactNode } from "react";
+import { formatCurrency } from "@/lib/utils";
 
 interface MetricCardProps {
   label: string;
@@ -75,7 +75,10 @@ export function MetricCard({
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <p className="text-[12px] font-medium text-slate-500 mb-1">{label}</p>
-          <p className="text-[26px] font-bold truncate" style={{ color: cfg.text }}>
+          <p
+            className="text-[26px] font-bold truncate"
+            style={{ color: cfg.text }}
+          >
             {isCurrency ? formatCurrency(value) : value.toLocaleString("en-IN")}
           </p>
           {subtitle && (
