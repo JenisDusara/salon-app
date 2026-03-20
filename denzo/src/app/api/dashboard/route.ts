@@ -5,10 +5,34 @@ export async function GET() {
   const now = new Date();
 
   // Date ranges
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  const todayStart = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    0,
+    0,
+    0,
+    0,
+  );
+  const todayEnd = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    23,
+    59,
+    59,
+    999,
+  );
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+  const monthEnd = new Date(
+    now.getFullYear(),
+    now.getMonth() + 1,
+    0,
+    23,
+    59,
+    59,
+    999,
+  );
 
   const [
     todayBills,
@@ -21,11 +45,19 @@ export async function GET() {
     activeEmployees,
     allBillItems,
   ] = await Promise.all([
-    prisma.bill.findMany({ where: { date: { gte: todayStart, lte: todayEnd } } }),
-    prisma.bill.findMany({ where: { date: { gte: monthStart, lte: monthEnd } } }),
+    prisma.bill.findMany({
+      where: { date: { gte: todayStart, lte: todayEnd } },
+    }),
+    prisma.bill.findMany({
+      where: { date: { gte: monthStart, lte: monthEnd } },
+    }),
     prisma.bill.findMany(),
-    prisma.expense.findMany({ where: { date: { gte: todayStart, lte: todayEnd } } }),
-    prisma.expense.findMany({ where: { date: { gte: monthStart, lte: monthEnd } } }),
+    prisma.expense.findMany({
+      where: { date: { gte: todayStart, lte: todayEnd } },
+    }),
+    prisma.expense.findMany({
+      where: { date: { gte: monthStart, lte: monthEnd } },
+    }),
     prisma.expense.findMany(),
     prisma.customer.count(),
     prisma.employee.findMany({ where: { isActive: true } }),
@@ -37,11 +69,23 @@ export async function GET() {
   ]);
 
   const todayIncome = todayBills.reduce((s, b) => s + Number(b.totalAmount), 0);
-  const todayExpenses = todayExpensesData.reduce((s, e) => s + Number(e.amount), 0);
-  const monthlyIncome = monthlyBills.reduce((s, b) => s + Number(b.totalAmount), 0);
-  const monthlyExpenses = monthlyExpensesData.reduce((s, e) => s + Number(e.amount), 0);
+  const todayExpenses = todayExpensesData.reduce(
+    (s, e) => s + Number(e.amount),
+    0,
+  );
+  const monthlyIncome = monthlyBills.reduce(
+    (s, b) => s + Number(b.totalAmount),
+    0,
+  );
+  const monthlyExpenses = monthlyExpensesData.reduce(
+    (s, e) => s + Number(e.amount),
+    0,
+  );
   const overallIncome = allBills.reduce((s, b) => s + Number(b.totalAmount), 0);
-  const overallExpenses = allExpensesData.reduce((s, e) => s + Number(e.amount), 0);
+  const overallExpenses = allExpensesData.reduce(
+    (s, e) => s + Number(e.amount),
+    0,
+  );
 
   // Labour income: per active employee
   const labourIncome = activeEmployees.map((emp) => {
