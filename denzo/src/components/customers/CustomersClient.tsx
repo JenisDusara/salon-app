@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { History, PenLine, Plus, Search, Users, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -31,6 +31,11 @@ export function CustomersClient({
 }) {
   const router = useRouter();
   const [customers, setCustomers] = useState(initialCustomers);
+
+  // Sync with server data when it changes (e.g. after router.refresh())
+  useEffect(() => {
+    setCustomers(initialCustomers);
+  }, [initialCustomers]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editCustomer, setEditCustomer] = useState<Customer | null>(null);
