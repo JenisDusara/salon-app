@@ -1,7 +1,15 @@
-import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
-type BadgeVariant = "active" | "inactive" | "expired" | "free" | "success" | "warning" | "info" | "default";
+type BadgeVariant =
+  | "active"
+  | "inactive"
+  | "expired"
+  | "free"
+  | "success"
+  | "warning"
+  | "info"
+  | "default";
 
 interface BadgeProps {
   variant?: BadgeVariant;
@@ -20,13 +28,17 @@ const variants: Record<BadgeVariant, string> = {
   default: "bg-slate-100 text-slate-600 border border-slate-200",
 };
 
-export function Badge({ variant = "default", children, className }: BadgeProps) {
+export function Badge({
+  variant = "default",
+  children,
+  className,
+}: BadgeProps) {
   return (
     <span
       className={cn(
         "inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full",
         variants[variant],
-        className
+        className,
       )}
     >
       {children}
