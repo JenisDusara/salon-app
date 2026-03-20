@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { MembershipsClient } from "@/components/memberships/MembershipsClient";
 import { prisma } from "@/lib/prisma";
 
