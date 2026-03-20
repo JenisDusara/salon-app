@@ -1,8 +1,8 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
-import { useEffect, type ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 
 interface ModalProps {
   isOpen: boolean;
@@ -19,7 +19,13 @@ const sizeClasses = {
   xl: "max-w-4xl",
 };
 
-export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalProps) {
+export function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  size = "md",
+}: ModalProps) {
   // Close on Escape key
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -60,7 +66,9 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
             {/* Header */}
             {title && (
               <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                <h2 className="text-[16px] font-semibold text-slate-800">{title}</h2>
+                <h2 className="text-[16px] font-semibold text-slate-800">
+                  {title}
+                </h2>
                 <button
                   type="button"
                   onClick={onClose}
