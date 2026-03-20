@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { COOKIE_MAX_AGE, COOKIE_NAME, signToken } from "@/lib/auth";
