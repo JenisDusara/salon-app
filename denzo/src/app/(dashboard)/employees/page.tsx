@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { EmployeesClient } from "@/components/employees/EmployeesClient";
 import { prisma } from "@/lib/prisma";
 
