@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Admin {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String   @map("password_hash")
+  role         String   @default("admin")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("admins")
+}
+
+model Customer {
+  id        Int       @id @default(autoincrement())
+  name      String
+  phone     String    @unique
+  email     String?
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  bills      Bill[]
+  membership Membership?
+
+  @@map("customers")
+}
+
+model Employee {
+  id         Int      @id @default(autoincrement())
+  name       String
+  phone      String   @unique
+  joinedDate DateTime @default(now()) @map("joined_date") @db.Date
+  isActive   Boolean  @default(true) @map("is_active")
+
+  billItems BillItem[]
+
+  @@map("employees")
+}
+
+model Service {
+  id        Int     @id @default(autoincrement())
+  name      String
+  basePrice Decimal @map("base_price") @db.Decimal(10, 2)
+
+  billItems        BillItem[]
+  planServices     MembershipPlanService[]
+  membershipUsages MembershipUsage[]
+
+  @@map("services")
+}
+
+model MembershipPlan {
+  id           Int     @id @default(autoincrement())
+  name         String
+  price        Decimal @db.Decimal(10, 2)
+  validityDays Int     @default(365) @map("validity_days")
+  isActive     Boolean @default(true) @map("is_active")
+
+  planServices MembershipPlanService[]
+  memberships  Membership[]
+
+  @@map("membership_plans")
+}
+
+model MembershipPlanService {
+  id           Int @id @default(autoincrement())
+  planId       Int @map("plan_id")
+  serviceId    Int @map("service_id")
+  allowedCount Int @map("allowed_count")
+
+  plan    MembershipPlan @relation(fields: [planId], references: [id])
+  service Service        @relation(fields: [serviceId], references: [id])
+
+  @@unique([planId, serviceId])
+  @@map("membership_plan_services")
+}
+
+model Membership {
+  id         Int      @id @default(autoincrement())
+  customerId Int      @unique @map("customer_id")
+  planId     Int      @map("plan_id")
+  startDate  DateTime @map("start_date") @db.Date
+  expiryDate DateTime @map("expiry_date") @db.Date
+  isActive   Boolean  @default(true) @map("is_active")
+
+  customer Customer          @relation(fields: [customerId], references: [id])
+  plan     MembershipPlan    @relation(fields: [planId], references: [id])
+  usages   MembershipUsage[]
+
+  @@map("memberships")
+}
+
+model Bill {
+  id          Int      @id @default(autoincrement())
+  customerId  Int      @map("customer_id")
+  date        DateTime @default(now()) @db.Date
+  totalAmount Decimal  @default(0) @map("total_amount") @db.Decimal(10, 2)
+  smsSent     Boolean  @default(false) @map("sms_sent")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  customer Customer   @relation(fields: [customerId], references: [id])
+  items    BillItem[]
+
+  @@map("bills")
+}
+
+model BillItem {
+  id                  Int     @id @default(autoincrement())
+  billId              Int     @map("bill_id")
+  serviceId           Int     @map("service_id")
+  employeeId          Int     @map("employee_id")
+  price               Decimal @db.Decimal(10, 2)
+  isMembershipService Boolean @default(false) @map("is_membership_service")
+
+  bill     Bill             @relation(fields: [billId], references: [id])
+  service  Service          @relation(fields: [serviceId], references: [id])
+  employee Employee         @relation(fields: [employeeId], references: [id])
+  usage    MembershipUsage?
+
+  @@map("bill_items")
+}
+
+model MembershipUsage {
+  id           Int      @id @default(autoincrement())
+  membershipId Int      @map("membership_id")
+  serviceId    Int      @map("service_id")
+  billItemId   Int      @unique @map("bill_item_id")
+  usedAt       DateTime @default(now()) @map("used_at")
+
+  membership Membership @relation(fields: [membershipId], references: [id])
+  service    Service    @relation(fields: [serviceId], references: [id])
+  billItem   BillItem   @relation(fields: [billItemId], references: [id])
+
+  @@map("membership_usages")
+}
+
+model Expense {
+  id          Int      @id @default(autoincrement())
+  category    String   @default("Other")
+  amount      Decimal  @db.Decimal(10, 2)
+  description String?
+  date        DateTime @default(now()) @db.Date
+
+  @@map("expenses")
+}
+
+model SmsCampaign {
+  id             Int      @id @default(autoincrement())
+  message        String
+  sentAt         DateTime @default(now()) @map("sent_at")
+  recipientCount Int      @default(0) @map("recipient_count")
+
+  @@map("sms_campaigns")
+}
