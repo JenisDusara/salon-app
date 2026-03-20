@@ -37,7 +37,15 @@ export function getTodayRange() {
 export function getMonthRange() {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+  const end = new Date(
+    now.getFullYear(),
+    now.getMonth() + 1,
+    0,
+    23,
+    59,
+    59,
+    999,
+  );
   return { start, end };
 }
 
@@ -52,7 +60,10 @@ export const EXPENSE_CATEGORIES = [
 
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
 
-export const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+export const CATEGORY_COLORS: Record<
+  string,
+  { bg: string; text: string; border: string }
+> = {
   Rent: { bg: "#eff6ff", text: "#1d4ed8", border: "#bfdbfe" },
   Electricity: { bg: "#fffbeb", text: "#b45309", border: "#fde68a" },
   Products: { bg: "#f0fdf4", text: "#15803d", border: "#bbf7d0" },
