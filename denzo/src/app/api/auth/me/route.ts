@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { verifyToken, COOKIE_NAME } from "@/lib/auth";
+import { NextResponse } from "next/server";
+import { COOKIE_NAME, verifyToken } from "@/lib/auth";
 
 export async function GET() {
   const cookieStore = await cookies();
