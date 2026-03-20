@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
 import { CustomersClient } from "@/components/customers/CustomersClient";
+import { prisma } from "@/lib/prisma";
 
 export default async function CustomersPage() {
   const customers = await prisma.customer.findMany({
