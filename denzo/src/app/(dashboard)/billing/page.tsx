@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { BillingClient } from "@/components/billing/BillingClient";
 import { prisma } from "@/lib/prisma";
 
