@@ -20,7 +20,9 @@ export async function GET() {
   return NextResponse.json(
     memberships.map((m) => {
       const serviceUsage = m.plan.planServices.map((ps) => {
-        const usedCount = m.usages.filter((u) => u.serviceId === ps.serviceId).length;
+        const usedCount = m.usages.filter(
+          (u) => u.serviceId === ps.serviceId,
+        ).length;
         return {
           serviceId: ps.serviceId,
           serviceName: ps.service.name,
@@ -44,16 +46,21 @@ export async function GET() {
         },
         serviceUsage,
       };
-    })
+    }),
   );
 }
 
 export async function POST(request: Request) {
   const { customerId, planId, startDate } = await request.json();
   if (!customerId || !planId)
-    return NextResponse.json({ error: "customerId and planId are required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "customerId and planId are required" },
+      { status: 400 },
+    );
 
-  const customer = await prisma.customer.findUnique({ where: { id: customerId } });
+  const customer = await prisma.customer.findUnique({
+    where: { id: customerId },
+  });
   if (!customer)
     return NextResponse.json({ error: "Customer not found" }, { status: 404 });
 
@@ -118,9 +125,12 @@ export async function POST(request: Request) {
           remaining: ps.allowedCount,
         })),
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch {
-    return NextResponse.json({ error: "Failed to create membership" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Failed to create membership" },
+      { status: 400 },
+    );
   }
 }
