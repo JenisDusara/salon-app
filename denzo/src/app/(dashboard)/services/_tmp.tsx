@@ -17,7 +17,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Salon Pro | Management Suite",
-  description: "Complete salon management system with billing, memberships, and analytics",
+  description:
+    "Complete salon management system with billing, memberships, and analytics",
 };
 
 export default function RootLayout({
@@ -32,11 +33,12 @@ export default function RootLayout({
     >
       <body className="h-full flex bg-slate-100">
         <Sidebar />
-        <div className="flex flex-col flex-1 min-h-screen" style={{ marginLeft: "240px" }}>
+        <div
+          className="flex flex-col flex-1 min-h-screen"
+          style={{ marginLeft: "240px" }}
+        >
           <TopBar />
-          <main className="flex-1 p-7 overflow-y-auto">
-            {children}
-          </main>
+          <main className="flex-1 p-7 overflow-y-auto">{children}</main>
         </div>
         <Toaster position="top-right" richColors closeButton />
       </body>
