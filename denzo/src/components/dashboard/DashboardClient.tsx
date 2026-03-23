@@ -71,6 +71,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
             <button
               key={tab}
               type="button"
+              suppressHydrationWarning
               onClick={() => setActiveTab(tab)}
               className="relative px-5 py-1.5 text-[13px] font-medium rounded-lg transition-colors duration-150 focus-visible:outline-none"
               style={{ color: activeTab === tab ? "#4f46e5" : "#64748b" }}

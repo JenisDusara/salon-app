@@ -12,6 +12,7 @@ import {
   TrendingDown,
   UserCheck,
   Users,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -46,7 +47,12 @@ const itemVariants = {
   },
 };
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -67,12 +73,17 @@ export function Sidebar() {
 
   return (
     <aside
-      className="fixed left-0 top-0 h-full w-[240px] z-40 flex flex-col"
+      className={`
+        fixed left-0 top-0 h-full w-[240px] z-40 flex flex-col
+        transition-transform duration-300 ease-in-out
+        ${isOpen ? "translate-x-0" : "-translate-x-full"}
+        md:translate-x-0
+      `}
       style={{ background: "var(--sidebar)" }}
     >
       {/* Logo */}
       <div
-        className="px-5 py-6 border-b"
+        className="px-5 py-6 border-b flex items-center justify-between"
         style={{ borderColor: "var(--sidebar-border)" }}
       >
         <motion.div
@@ -96,6 +107,17 @@ export function Sidebar() {
             </p>
           </div>
         </motion.div>
+
+        {/* Close button — mobile only */}
+        <button
+          type="button"
+          suppressHydrationWarning
+          onClick={onClose}
+          className="md:hidden p-1.5 rounded-lg hover:bg-white/5 transition-colors"
+          style={{ color: "#6b7280" }}
+        >
+          <X size={18} />
+        </button>
       </div>
 
       {/* Nav */}
@@ -119,6 +141,7 @@ export function Sidebar() {
               <motion.li key={href} variants={itemVariants}>
                 <Link
                   href={href}
+                  onClick={onClose}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 relative group"
                   style={{
                     background: isActive
@@ -183,6 +206,7 @@ export function Sidebar() {
             onClick={handleLogout}
             disabled={loggingOut}
             title="Logout"
+            suppressHydrationWarning
             className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
             style={{
               background: "rgba(239,68,68,0.08)",
