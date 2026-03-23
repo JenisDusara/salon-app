@@ -5,6 +5,7 @@ import {
   Calculator,
   CreditCard,
   DollarSign,
+  Download,
   TrendingDown,
   TrendingUp,
   Trophy,
@@ -209,6 +210,7 @@ function IncomeExpenseBar({ income, expenses }: { income: number; expenses: numb
 // ── Main Dashboard ─────────────────────────────────────────────────────────────
 export function DashboardClient({ data }: { data: DashboardData }) {
   const [activeTab, setActiveTab] = useState<"today" | "monthly">("today");
+  const [exporting, setExporting] = useState(false);
   const [profitStart, setProfitStart] = useState("");
   const [profitEnd, setProfitEnd] = useState("");
   const [profitResult, setProfitResult] = useState<{
@@ -222,6 +224,29 @@ export function DashboardClient({ data }: { data: DashboardData }) {
   const breakdown = activeTab === "today" ? data.todayBreakdown : data.monthlyBreakdown;
   const sortedLabour = [...data.labourIncome].sort((a, b) => b.totalIncome - a.totalIncome);
   const maxRevenue = sortedLabour[0]?.totalIncome || 1;
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const res = await fetch("/api/export");
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const today = new Date().toLocaleDateString("en-IN", {
+        day: "2-digit", month: "short", year: "numeric",
+      }).replace(/ /g, "-");
+      a.download = `Denzo-Report-${today}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Excel file downloaded!");
+    } catch {
+      toast.error("Failed to export");
+    } finally {
+      setExporting(false);
+    }
+  }
 
   async function handleCalculateProfit() {
     if (!profitStart || !profitEnd) { toast.error("Please select both dates"); return; }
@@ -243,7 +268,8 @@ export function DashboardClient({ data }: { data: DashboardData }) {
     <PageTransition>
       <div className="space-y-5">
 
-        {/* ── Tab Switcher ── */}
+        {/* ── Top Bar: Tab Switcher + Export ── */}
+        <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-1 bg-white rounded-xl p-1 w-fit shadow-sm border border-slate-100">
           {(["today", "monthly"] as const).map((tab) => (
             <button
@@ -264,6 +290,19 @@ export function DashboardClient({ data }: { data: DashboardData }) {
               <span className="relative z-10">{tab === "today" ? "Today" : "This Month"}</span>
             </button>
           ))}
+        </div>
+
+          {/* Export Button */}
+          <button
+            type="button"
+            suppressHydrationWarning
+            onClick={handleExport}
+            disabled={exporting}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm text-[13px] font-medium text-slate-600 hover:border-emerald-300 hover:text-emerald-700 hover:bg-emerald-50 transition-colors disabled:opacity-60"
+          >
+            <Download size={14} />
+            {exporting ? "Exporting..." : "Export Excel"}
+          </button>
         </div>
 
         {/* ── KPI Cards ── */}
