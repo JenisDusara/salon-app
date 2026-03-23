@@ -89,9 +89,7 @@ export function ExpensesClient({
         });
         if (!res.ok) throw new Error();
         const updated = await res.json();
-        setExpenses((prev) =>
-          prev.map((e) => (e.id === updated.id ? updated : e)),
-        );
+        setExpenses((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
         toast.success("Expense updated");
       } else {
         const res = await fetch("/api/expenses", {
@@ -122,9 +120,7 @@ export function ExpensesClient({
     if (!deleteId) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/expenses/${deleteId}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(`/api/expenses/${deleteId}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
       setExpenses((prev) => prev.filter((e) => e.id !== deleteId));
       toast.success("Expense deleted");
@@ -139,60 +135,30 @@ export function ExpensesClient({
 
   return (
     <PageTransition>
-      <div className="space-y-6">
+      <div className="space-y-5">
+
         {/* Metric Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <MetricCard
-            label="Today's Expenses"
-            value={summary.today}
-            icon={<TrendingDown size={18} />}
-            color="expense"
-            delay={0}
-          />
-          <MetricCard
-            label="Monthly Expenses"
-            value={summary.monthly}
-            icon={<TrendingDown size={18} />}
-            color="expense"
-            delay={0.08}
-          />
-          <MetricCard
-            label="Total Expenses"
-            value={summary.total}
-            icon={<TrendingDown size={18} />}
-            color="expense"
-            delay={0.16}
-          />
+          <MetricCard label="Today's Expenses" value={summary.today} icon={<TrendingDown size={18} />} color="expense" delay={0} />
+          <MetricCard label="Monthly Expenses" value={summary.monthly} icon={<TrendingDown size={18} />} color="expense" delay={0.08} />
+          <MetricCard label="Total Expenses" value={summary.total} icon={<TrendingDown size={18} />} color="expense" delay={0.16} />
         </div>
 
         {/* Category Breakdown */}
         {Object.keys(summary.byCategory).length > 0 && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-            <h3 className="text-[13px] font-semibold text-slate-700 mb-4">
-              By Category
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-5">
+            <h3 className="text-[13px] font-semibold text-slate-700 mb-3">By Category</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
               {Object.entries(summary.byCategory).map(([cat, amt]) => {
                 const colors = CATEGORY_COLORS[cat] ?? CATEGORY_COLORS.Other;
                 return (
                   <div
                     key={cat}
-                    className="flex items-center justify-between rounded-xl px-4 py-3 border"
-                    style={{
-                      background: colors.bg,
-                      borderColor: colors.border,
-                    }}
+                    className="flex items-center justify-between rounded-xl px-3 py-2.5 border"
+                    style={{ background: colors.bg, borderColor: colors.border }}
                   >
-                    <span
-                      className="text-[12px] font-semibold"
-                      style={{ color: colors.text }}
-                    >
-                      {cat}
-                    </span>
-                    <span
-                      className="text-[13px] font-bold"
-                      style={{ color: colors.text }}
-                    >
+                    <span className="text-[11px] font-semibold truncate" style={{ color: colors.text }}>{cat}</span>
+                    <span className="text-[12px] font-bold flex-shrink-0 ml-1" style={{ color: colors.text }}>
                       ₹{amt.toLocaleString("en-IN")}
                     </span>
                   </div>
@@ -202,17 +168,16 @@ export function ExpensesClient({
           </div>
         )}
 
-        {/* Table */}
+        {/* Expenses list */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-            <h2 className="text-[15px] font-semibold text-slate-800">
-              All Expenses
-            </h2>
+          <div className="px-4 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 className="text-[15px] font-semibold text-slate-800">All Expenses</h2>
             <Button variant="primary" size="sm" onClick={openAdd}>
               <Plus size={13} />
               Add Expense
             </Button>
           </div>
+
           {expenses.length === 0 ? (
             <EmptyState
               icon={<TrendingDown size={22} />}
@@ -226,142 +191,144 @@ export function ExpensesClient({
               }
             />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-slate-50">
-                    <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-6 py-3">
-                      Date
-                    </th>
-                    <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">
-                      Category
-                    </th>
-                    <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">
-                      Description
-                    </th>
-                    <th className="text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">
-                      Amount
-                    </th>
-                    <th className="text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-6 py-3">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {expenses.map((e, idx) => {
-                    const colors =
-                      CATEGORY_COLORS[e.category] ?? CATEGORY_COLORS.Other;
-                    return (
-                      <motion.tr
-                        key={e.id}
-                        initial={{ opacity: 0, y: 4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.2, delay: idx * 0.03 }}
-                        className="border-t border-slate-50 hover:bg-slate-50/50 transition-colors"
-                      >
-                        <td className="px-6 py-3.5 text-[12px] text-slate-500">
-                          {formatDate(e.date)}
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <span
-                            className="text-[11px] font-semibold px-2.5 py-1 rounded-full border"
-                            style={{
-                              background: colors.bg,
-                              color: colors.text,
-                              borderColor: colors.border,
-                            }}
-                          >
-                            {e.category}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3.5 text-[12px] text-slate-500 max-w-[200px] truncate">
-                          {e.description ?? (
-                            <span className="text-slate-300">—</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3.5 text-right text-[13px] font-semibold text-rose-600">
-                          ₹{e.amount.toLocaleString("en-IN")}
-                        </td>
-                        <td className="px-6 py-3.5">
-                          <div className="flex items-center justify-end gap-1">
-                            <button
-                              type="button"
-                              onClick={() => openEdit(e)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+            <>
+              {/* ── Mobile: Card list ── */}
+              <div className="sm:hidden divide-y divide-slate-50">
+                {expenses.map((e, idx) => {
+                  const colors = CATEGORY_COLORS[e.category] ?? CATEGORY_COLORS.Other;
+                  return (
+                    <motion.div
+                      key={e.id}
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2, delay: idx * 0.03 }}
+                      className="px-4 py-3.5 hover:bg-slate-50/50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span
+                              className="text-[10px] font-semibold px-2 py-0.5 rounded-full border"
+                              style={{ background: colors.bg, color: colors.text, borderColor: colors.border }}
                             >
+                              {e.category}
+                            </span>
+                            <span className="text-[11px] text-slate-400">{formatDate(e.date)}</span>
+                          </div>
+                          {e.description && (
+                            <p className="text-[12px] text-slate-500 truncate">{e.description}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <p className="text-[15px] font-bold text-rose-600">₹{e.amount.toLocaleString("en-IN")}</p>
+                          <div className="flex items-center gap-1">
+                            <button type="button" onClick={() => openEdit(e)} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
                               <PenLine size={13} />
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => setDeleteId(e.id)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                            >
+                            <button type="button" onClick={() => setDeleteId(e.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors">
                               <Trash2 size={13} />
                             </button>
                           </div>
-                        </td>
-                      </motion.tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              {/* ── Desktop: Table ── */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-slate-50">
+                      <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-6 py-3">Date</th>
+                      <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Category</th>
+                      <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Description</th>
+                      <th className="text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Amount</th>
+                      <th className="text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-6 py-3">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {expenses.map((e, idx) => {
+                      const colors = CATEGORY_COLORS[e.category] ?? CATEGORY_COLORS.Other;
+                      return (
+                        <motion.tr
+                          key={e.id}
+                          initial={{ opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.2, delay: idx * 0.03 }}
+                          className="border-t border-slate-50 hover:bg-slate-50/50 transition-colors"
+                        >
+                          <td className="px-6 py-3.5 text-[12px] text-slate-500">{formatDate(e.date)}</td>
+                          <td className="px-4 py-3.5">
+                            <span
+                              className="text-[11px] font-semibold px-2.5 py-1 rounded-full border"
+                              style={{ background: colors.bg, color: colors.text, borderColor: colors.border }}
+                            >
+                              {e.category}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3.5 text-[12px] text-slate-500 max-w-[200px] truncate">
+                            {e.description ?? <span className="text-slate-300">—</span>}
+                          </td>
+                          <td className="px-4 py-3.5 text-right text-[13px] font-semibold text-rose-600">
+                            ₹{e.amount.toLocaleString("en-IN")}
+                          </td>
+                          <td className="px-6 py-3.5">
+                            <div className="flex items-center justify-end gap-1">
+                              <button type="button" onClick={() => openEdit(e)} className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
+                                <PenLine size={13} />
+                              </button>
+                              <button type="button" onClick={() => setDeleteId(e.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors">
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          </td>
+                        </motion.tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>
 
       {/* Form Modal */}
-      <Modal
-        isOpen={showForm}
-        onClose={closeForm}
-        title={editExpense ? "Edit Expense" : "Add Expense"}
-        size="sm"
-      >
+      <Modal isOpen={showForm} onClose={closeForm} title={editExpense ? "Edit Expense" : "Add Expense"} size="sm">
         <div className="space-y-4">
           <div>
-            <label className="text-[12px] font-medium text-slate-600 mb-1.5 block">
-              Category
-            </label>
+            <label className="text-[12px] font-medium text-slate-600 mb-1.5 block">Category</label>
             <select
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
               className="w-full h-9 rounded-lg border border-slate-200 bg-slate-50 px-3 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              {EXPENSE_CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
+              {EXPENSE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           {form.category === "Salary" && (
             <div>
-              <label className="text-[12px] font-medium text-slate-600 mb-1.5 block">
-                Employee *
-              </label>
+              <label className="text-[12px] font-medium text-slate-600 mb-1.5 block">Employee *</label>
               <select
                 value={form.employeeId}
                 onChange={(e) => setForm({ ...form, employeeId: e.target.value })}
                 className="w-full h-9 rounded-lg border border-slate-200 bg-slate-50 px-3 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">Select employee</option>
-                {employees.map((e) => (
-                  <option key={e.id} value={e.id}>{e.name}</option>
-                ))}
+                {employees.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
               </select>
             </div>
           )}
           <div>
-            <label className="text-[12px] font-medium text-slate-600 mb-1.5 block">
-              Amount (₹) *
-            </label>
+            <label className="text-[12px] font-medium text-slate-600 mb-1.5 block">Amount (₹) *</label>
             <input
               type="number"
               value={form.amount}
               onChange={(e) => setForm({ ...form, amount: e.target.value })}
               placeholder="0"
               min="0"
-              step="1"
               className="w-full h-9 rounded-lg border border-slate-200 bg-slate-50 px-3 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
@@ -380,10 +347,7 @@ export function ExpensesClient({
           )}
           <div>
             <label className="text-[12px] font-medium text-slate-600 mb-1.5 block">
-              Date{" "}
-              <span className="text-slate-400">
-                (optional, defaults to today)
-              </span>
+              Date <span className="text-slate-400">(optional, defaults to today)</span>
             </label>
             <input
               type="date"
@@ -393,21 +357,8 @@ export function ExpensesClient({
             />
           </div>
           <div className="flex gap-2 pt-2">
-            <Button
-              variant="ghost"
-              size="md"
-              className="flex-1"
-              onClick={closeForm}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              size="md"
-              className="flex-1"
-              onClick={handleSave}
-              loading={saving}
-            >
+            <Button variant="ghost" size="md" className="flex-1" onClick={closeForm}>Cancel</Button>
+            <Button variant="primary" size="md" className="flex-1" onClick={handleSave} loading={saving}>
               {editExpense ? "Save Changes" : "Add Expense"}
             </Button>
           </div>

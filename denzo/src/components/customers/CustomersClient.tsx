@@ -219,95 +219,104 @@ export function CustomersClient({
               }
             />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-100">
-                    <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-6 py-3">
-                      Customer
-                    </th>
-                    <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">
-                      Email
-                    </th>
-                    <th className="text-center text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">
-                      Visits
-                    </th>
-                    <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">
-                      Joined
-                    </th>
-                    <th className="text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-6 py-3">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((c, idx) => (
-                    <motion.tr
-                      key={c.id}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2, delay: idx * 0.04 }}
-                      className="border-t border-slate-50 hover:bg-slate-50/50 transition-colors"
-                    >
-                      <td className="px-6 py-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-[13px] font-bold flex-shrink-0">
-                            {c.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="text-[13px] font-semibold text-slate-800">
-                              {c.name}
-                            </p>
-                            <p className="text-[11px] text-slate-400">
-                              {c.phone}
-                            </p>
+            <>
+              {/* ── Mobile: Card list ── */}
+              <div className="sm:hidden divide-y divide-slate-50">
+                {filtered.map((c, idx) => (
+                  <motion.div
+                    key={c.id}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2, delay: idx * 0.04 }}
+                    className="px-4 py-3.5 hover:bg-slate-50/50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-[13px] font-bold flex-shrink-0">
+                          {c.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[13px] font-semibold text-slate-800 truncate">{c.name}</p>
+                          <p className="text-[11px] text-slate-400">{c.phone}</p>
+                          <div className="mt-1">
+                            <Badge variant={getVisitBadgeVariant(c.totalVisits)}>{c.totalVisits} visits</Badge>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-4 py-3.5 text-[13px] text-slate-500">
-                        {c.email ?? <span className="text-slate-300">—</span>}
-                      </td>
-                      <td className="px-4 py-3.5 text-center">
-                        <Badge variant={getVisitBadgeVariant(c.totalVisits)}>
-                          {c.totalVisits} visits
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3.5 text-[12px] text-slate-500">
-                        {formatDate(c.createdAt)}
-                      </td>
-                      <td className="px-6 py-3.5">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => openHistory(c)}
-                            className="flex items-center gap-1.5 text-[12px] text-indigo-600 hover:text-indigo-800 font-medium transition-colors px-2 py-1 rounded-lg hover:bg-indigo-50"
-                          >
-                            <History size={13} />
-                            History
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => openEdit(c)}
-                            className="flex items-center gap-1.5 text-[12px] text-slate-500 hover:text-slate-700 font-medium transition-colors px-2 py-1 rounded-lg hover:bg-slate-100"
-                          >
-                            <PenLine size={13} />
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteCustomer(c)}
-                            className="flex items-center gap-1.5 text-[12px] text-rose-400 hover:text-rose-600 font-medium transition-colors px-2 py-1 rounded-lg hover:bg-rose-50"
-                          >
-                            <Trash2 size={13} />
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button type="button" onClick={() => openHistory(c)} className="p-2 rounded-lg text-indigo-500 hover:bg-indigo-50 transition-colors">
+                          <History size={15} />
+                        </button>
+                        <button type="button" onClick={() => openEdit(c)} className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors">
+                          <PenLine size={15} />
+                        </button>
+                        <button type="button" onClick={() => setDeleteCustomer(c)} className="p-2 rounded-lg text-rose-400 hover:bg-rose-50 transition-colors">
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* ── Desktop: Table ── */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-100">
+                      <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-6 py-3">Customer</th>
+                      <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Email</th>
+                      <th className="text-center text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Visits</th>
+                      <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Joined</th>
+                      <th className="text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-6 py-3">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((c, idx) => (
+                      <motion.tr
+                        key={c.id}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2, delay: idx * 0.04 }}
+                        className="border-t border-slate-50 hover:bg-slate-50/50 transition-colors"
+                      >
+                        <td className="px-6 py-3.5">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-[13px] font-bold flex-shrink-0">
+                              {c.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="text-[13px] font-semibold text-slate-800">{c.name}</p>
+                              <p className="text-[11px] text-slate-400">{c.phone}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5 text-[13px] text-slate-500">
+                          {c.email ?? <span className="text-slate-300">—</span>}
+                        </td>
+                        <td className="px-4 py-3.5 text-center">
+                          <Badge variant={getVisitBadgeVariant(c.totalVisits)}>{c.totalVisits} visits</Badge>
+                        </td>
+                        <td className="px-4 py-3.5 text-[12px] text-slate-500">{formatDate(c.createdAt)}</td>
+                        <td className="px-6 py-3.5">
+                          <div className="flex items-center justify-end gap-2">
+                            <button type="button" onClick={() => openHistory(c)} className="flex items-center gap-1.5 text-[12px] text-indigo-600 hover:text-indigo-800 font-medium transition-colors px-2 py-1 rounded-lg hover:bg-indigo-50">
+                              <History size={13} />History
+                            </button>
+                            <button type="button" onClick={() => openEdit(c)} className="flex items-center gap-1.5 text-[12px] text-slate-500 hover:text-slate-700 font-medium transition-colors px-2 py-1 rounded-lg hover:bg-slate-100">
+                              <PenLine size={13} />Edit
+                            </button>
+                            <button type="button" onClick={() => setDeleteCustomer(c)} className="flex items-center gap-1.5 text-[12px] text-rose-400 hover:text-rose-600 font-medium transition-colors px-2 py-1 rounded-lg hover:bg-rose-50">
+                              <Trash2 size={13} />Delete
+                            </button>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>

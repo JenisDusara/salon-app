@@ -188,31 +188,10 @@ export function EmployeesClient({
             }
           />
         ) : (
-          <div
-            className="bg-white rounded-2xl border border-slate-100 overflow-hidden"
-            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
-          >
-            {/* Table header */}
-            <div className="grid grid-cols-[1fr_140px_120px_100px_80px] gap-4 px-5 py-3 bg-slate-50 border-b border-slate-100">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
-                Name
-              </span>
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
-                Phone
-              </span>
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
-                Joined
-              </span>
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
-                Status
-              </span>
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide text-right">
-                Actions
-              </span>
-            </div>
+          <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
 
-            {/* Rows */}
-            <div className="divide-y divide-slate-50">
+            {/* ── Mobile: Cards ── */}
+            <div className="sm:hidden divide-y divide-slate-50">
               {employees.map((e, i) => (
                 <motion.div
                   key={e.id}
@@ -220,55 +199,73 @@ export function EmployeesClient({
                   variants={rowVariants}
                   initial="hidden"
                   animate="visible"
-                  className="grid grid-cols-[1fr_140px_120px_100px_80px] gap-4 px-5 py-3.5 items-center hover:bg-slate-50/60 transition-colors"
+                  className="px-4 py-3.5 hover:bg-slate-50/60 transition-colors"
                 >
-                  {/* Name + avatar */}
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold text-white flex-shrink-0"
-                      style={{
-                        background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-                      }}
-                    >
-                      {e.name.charAt(0).toUpperCase()}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold text-white flex-shrink-0" style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
+                        {e.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-semibold text-slate-800 truncate">{e.name}</p>
+                        <p className="text-[11px] text-slate-400">{e.phone} · {formatDate(e.joinedDate)}</p>
+                        <div className="mt-1">
+                          <Badge variant={e.isActive ? "active" : "inactive"}>{e.isActive ? "Active" : "Inactive"}</Badge>
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-[13px] font-semibold text-slate-800 truncate">
-                      {e.name}
-                    </span>
-                  </div>
-
-                  <span className="text-[13px] text-slate-600">{e.phone}</span>
-                  <span className="text-[13px] text-slate-500">
-                    {formatDate(e.joinedDate)}
-                  </span>
-
-                  <div>
-                    <Badge variant={e.isActive ? "active" : "inactive"}>
-                      {e.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-1 justify-end">
-                    <button
-                      type="button"
-                      title="View report"
-                      onClick={() => openReport(e)}
-                      className="p-1.5 rounded-lg bg-violet-50 text-violet-500 hover:bg-violet-100 transition-colors"
-                    >
-                      <TrendingUp size={13} />
-                    </button>
-                    <button
-                      type="button"
-                      title="Edit"
-                      onClick={() => openEdit(e)}
-                      className="p-1.5 rounded-lg bg-indigo-50 text-indigo-500 hover:bg-indigo-100 transition-colors"
-                    >
-                      <PenLine size={13} />
-                    </button>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button type="button" onClick={() => openReport(e)} className="p-2 rounded-lg bg-violet-50 text-violet-500 hover:bg-violet-100 transition-colors">
+                        <TrendingUp size={15} />
+                      </button>
+                      <button type="button" onClick={() => openEdit(e)} className="p-2 rounded-lg bg-indigo-50 text-indigo-500 hover:bg-indigo-100 transition-colors">
+                        <PenLine size={15} />
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               ))}
+            </div>
+
+            {/* ── Desktop: Grid rows ── */}
+            <div className="hidden sm:block">
+              <div className="grid grid-cols-[1fr_140px_120px_100px_80px] gap-4 px-5 py-3 bg-slate-50 border-b border-slate-100">
+                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Name</span>
+                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Phone</span>
+                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Joined</span>
+                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Status</span>
+                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide text-right">Actions</span>
+              </div>
+              <div className="divide-y divide-slate-50">
+                {employees.map((e, i) => (
+                  <motion.div
+                    key={e.id}
+                    custom={i}
+                    variants={rowVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="grid grid-cols-[1fr_140px_120px_100px_80px] gap-4 px-5 py-3.5 items-center hover:bg-slate-50/60 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold text-white flex-shrink-0" style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
+                        {e.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-[13px] font-semibold text-slate-800 truncate">{e.name}</span>
+                    </div>
+                    <span className="text-[13px] text-slate-600">{e.phone}</span>
+                    <span className="text-[13px] text-slate-500">{formatDate(e.joinedDate)}</span>
+                    <div><Badge variant={e.isActive ? "active" : "inactive"}>{e.isActive ? "Active" : "Inactive"}</Badge></div>
+                    <div className="flex items-center gap-1 justify-end">
+                      <button type="button" onClick={() => openReport(e)} className="p-1.5 rounded-lg bg-violet-50 text-violet-500 hover:bg-violet-100 transition-colors">
+                        <TrendingUp size={13} />
+                      </button>
+                      <button type="button" onClick={() => openEdit(e)} className="p-1.5 rounded-lg bg-indigo-50 text-indigo-500 hover:bg-indigo-100 transition-colors">
+                        <PenLine size={13} />
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </div>
         )}
