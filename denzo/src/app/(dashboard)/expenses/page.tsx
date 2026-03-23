@@ -8,7 +8,7 @@ export default async function ExpensesPage() {
   const { start: todayStart, end: todayEnd } = getTodayRange();
   const { start: monthStart, end: monthEnd } = getMonthRange();
 
-  const [expenses, todayAgg, monthlyAgg, totalAgg, byCat] = await Promise.all([
+  const [expenses, todayAgg, monthlyAgg, totalAgg, byCat, employees] = await Promise.all([
     prisma.expense.findMany({ orderBy: { date: "desc" } }),
     prisma.expense.aggregate({
       _sum: { amount: true },
@@ -20,6 +20,7 @@ export default async function ExpensesPage() {
     }),
     prisma.expense.aggregate({ _sum: { amount: true } }),
     prisma.expense.groupBy({ by: ["category"], _sum: { amount: true } }),
+    prisma.employee.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
   ]);
 
   const byCategory: Record<string, number> = {};
@@ -28,6 +29,7 @@ export default async function ExpensesPage() {
 
   return (
     <ExpensesClient
+      employees={employees.map((e) => ({ id: e.id, name: e.name }))}
       initialExpenses={expenses.map((e) => ({
         id: e.id,
         category: e.category,

@@ -110,15 +110,14 @@ export function ServicesClient({
     if (!deleteId) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/services/${deleteId}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error();
+      const res = await fetch(`/api/services/${deleteId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to delete service");
       setServices((prev) => prev.filter((s) => s.id !== deleteId));
       toast.success("Service deleted");
       router.refresh();
-    } catch {
-      toast.error("Failed to delete service");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete service");
     } finally {
       setDeleting(false);
       setDeleteId(null);

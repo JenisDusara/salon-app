@@ -4,24 +4,17 @@ import { MembershipsClient } from "@/components/memberships/MembershipsClient";
 import { prisma } from "@/lib/prisma";
 
 export default async function MembershipsPage() {
-  const [memberships, plans, services] = await Promise.all([
+  const [memberships, plans] = await Promise.all([
     prisma.membership.findMany({
-      include: {
-        customer: true,
-        plan: { include: { planServices: { include: { service: true } } } },
-        usages: true,
-      },
+      include: { customer: true, plan: true },
       orderBy: { id: "desc" },
     }),
-    prisma.membershipPlan.findMany({
-      include: { planServices: { include: { service: true } } },
-      orderBy: { id: "desc" },
-    }),
-    prisma.service.findMany({ orderBy: { name: "asc" } }),
+    prisma.membershipPlan.findMany({ orderBy: { id: "desc" } }),
   ]);
 
   const formattedMemberships = memberships.map((m) => {
     const isExpired = new Date() > m.expiryDate;
+    const totalBalance = Number(m.plan.price) * (1 + m.plan.bonusPercent / 100);
     return {
       id: m.id,
       customerId: m.customerId,
@@ -32,18 +25,8 @@ export default async function MembershipsPage() {
       expiryDate: m.expiryDate.toISOString(),
       isActive: m.isActive,
       isExpired,
-      services: m.plan.planServices.map((ps) => {
-        const used = m.usages.filter(
-          (u) => u.serviceId === ps.serviceId,
-        ).length;
-        return {
-          serviceId: ps.serviceId,
-          serviceName: ps.service.name,
-          allowed: ps.allowedCount,
-          used,
-          remaining: ps.allowedCount - used,
-        };
-      }),
+      balance: Number(m.balance),
+      totalBalance,
     };
   });
 
@@ -54,18 +37,9 @@ export default async function MembershipsPage() {
         id: p.id,
         name: p.name,
         price: Number(p.price),
+        bonusPercent: p.bonusPercent,
         validityDays: p.validityDays,
         isActive: p.isActive,
-        services: p.planServices.map((ps) => ({
-          serviceId: ps.serviceId,
-          serviceName: ps.service.name,
-          allowedCount: ps.allowedCount,
-        })),
-      }))}
-      services={services.map((s) => ({
-        id: s.id,
-        name: s.name,
-        basePrice: Number(s.basePrice),
       }))}
     />
   );

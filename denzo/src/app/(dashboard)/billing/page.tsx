@@ -18,7 +18,15 @@ export default async function BillingPage() {
         items: { include: { service: true, employee: true } },
       },
     }),
-    prisma.customer.findMany({ orderBy: { name: "asc" } }),
+    prisma.customer.findMany({
+      orderBy: { name: "asc" },
+      include: {
+        membership: {
+          where: { isActive: true },
+          select: { balance: true, expiryDate: true },
+        },
+      },
+    }),
   ]);
 
   return (
@@ -41,6 +49,7 @@ export default async function BillingPage() {
         customerName: b.customer.name,
         date: b.date.toISOString(),
         totalAmount: Number(b.totalAmount),
+        paymentMode: b.paymentMode,
         smsSent: b.smsSent,
         items: b.items.map((i) => ({
           id: i.id,
@@ -52,14 +61,19 @@ export default async function BillingPage() {
           isMembershipService: i.isMembershipService,
         })),
       }))}
-      allCustomers={customers.map((c) => ({
-        id: c.id,
-        name: c.name,
-        phone: c.phone,
-        email: c.email,
-        createdAt: c.createdAt.toISOString(),
-        totalVisits: 0,
-      }))}
+      allCustomers={customers.map((c) => {
+        const mem = c.membership;
+        const hasActiveMembership = mem && new Date() <= mem.expiryDate;
+        return {
+          id: c.id,
+          name: c.name,
+          phone: c.phone,
+          email: c.email,
+          createdAt: c.createdAt.toISOString(),
+          totalVisits: 0,
+          membershipBalance: hasActiveMembership ? Number(mem.balance) : undefined,
+        };
+      })}
     />
   );
 }

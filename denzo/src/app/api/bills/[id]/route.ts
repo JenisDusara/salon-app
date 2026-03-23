@@ -33,6 +33,7 @@ export async function GET(
     date: bill.date.toISOString(),
     totalAmount: Number(bill.totalAmount),
     smsSent: bill.smsSent,
+    paymentMode: bill.paymentMode,
     createdAt: bill.createdAt.toISOString(),
     customer: bill.customer,
     items: bill.items.map((item) => ({

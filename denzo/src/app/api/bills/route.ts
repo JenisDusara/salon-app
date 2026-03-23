@@ -24,6 +24,7 @@ export async function GET() {
       date: bill.date.toISOString(),
       totalAmount: Number(bill.totalAmount),
       smsSent: bill.smsSent,
+      paymentMode: bill.paymentMode,
       createdAt: bill.createdAt.toISOString(),
       customer: bill.customer,
       items: bill.items.map((item) => ({
@@ -39,45 +40,27 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const { customerId, items, date } = body as {
+  const { customerId, items, date, paymentMode } = body as {
     customerId: number;
     items: { serviceId: number; employeeId: number; price?: number }[];
     date?: string;
+    paymentMode: string;
   };
 
-  if (!customerId || !items || !Array.isArray(items) || items.length === 0)
-    return NextResponse.json(
-      { error: "customerId and items are required" },
-      { status: 400 },
-    );
+  if (!paymentMode || !["cash", "card", "online", "membership"].includes(paymentMode))
+    return NextResponse.json({ error: "Valid paymentMode is required" }, { status: 400 });
 
-  // 1. Find customer
-  const customer = await prisma.customer.findUnique({
-    where: { id: customerId },
-  });
+  if (!customerId || !items || !Array.isArray(items) || items.length === 0)
+    return NextResponse.json({ error: "customerId and items are required" }, { status: 400 });
+
+  const customer = await prisma.customer.findUnique({ where: { id: customerId } });
   if (!customer)
     return NextResponse.json({ error: "Customer not found" }, { status: 404 });
 
-  // 2. Find active non-expired membership with plan services
   const now = new Date();
-  const membership = await prisma.membership.findFirst({
-    where: {
-      customerId,
-      isActive: true,
-      expiryDate: { gte: now },
-    },
-    include: {
-      plan: {
-        include: {
-          planServices: {
-            include: { service: true },
-          },
-        },
-      },
-    },
-  });
+  const billDate = date ? new Date(date) : now;
 
-  // 3. Process each item — apply membership if quota is available
+  // Resolve prices from service base price if not provided
   const processedItems: {
     serviceId: number;
     employeeId: number;
@@ -85,67 +68,43 @@ export async function POST(request: Request) {
     isMembershipService: boolean;
   }[] = [];
 
-  // Track in-memory usage increments per service during this bill
-  const inMemoryUsage: Record<number, number> = {};
-
   for (const item of items) {
     let price = item.price ?? 0;
-    let isMembershipService = false;
-
-    if (membership) {
-      const planService = membership.plan.planServices.find(
-        (ps) => ps.serviceId === item.serviceId,
-      );
-
-      if (planService) {
-        // Count existing usage from DB
-        const dbUsageCount = await prisma.membershipUsage.count({
-          where: {
-            membershipId: membership.id,
-            serviceId: item.serviceId,
-          },
-        });
-
-        const usedSoFarThisBill = inMemoryUsage[item.serviceId] ?? 0;
-        const totalUsed = dbUsageCount + usedSoFarThisBill;
-
-        if (totalUsed < planService.allowedCount) {
-          price = 0;
-          isMembershipService = true;
-          inMemoryUsage[item.serviceId] = usedSoFarThisBill + 1;
-        }
-      }
+    if (item.price === undefined) {
+      const svc = await prisma.service.findUnique({ where: { id: item.serviceId } });
+      price = svc ? Number(svc.basePrice) : 0;
     }
-
-    // If no price override from membership and item.price was provided, use it
-    if (!isMembershipService && item.price !== undefined) {
-      price = item.price;
-    } else if (!isMembershipService) {
-      // Fall back to service basePrice
-      const service = await prisma.service.findUnique({
-        where: { id: item.serviceId },
-      });
-      price = service ? Number(service.basePrice) : 0;
-    }
-
     processedItems.push({
       serviceId: item.serviceId,
       employeeId: item.employeeId,
       price,
-      isMembershipService,
+      isMembershipService: paymentMode === "membership",
     });
   }
 
   const totalAmount = processedItems.reduce((sum, i) => sum + i.price, 0);
-  const billDate = date ? new Date(date) : now;
 
-  // 4. Create bill and items in a transaction
+  // If paying with membership, validate balance
+  if (paymentMode === "membership") {
+    const membership = await prisma.membership.findFirst({
+      where: { customerId, isActive: true, expiryDate: { gte: now } },
+    });
+    if (!membership)
+      return NextResponse.json({ error: "No active membership found" }, { status: 400 });
+    if (Number(membership.balance) < totalAmount)
+      return NextResponse.json(
+        { error: `Insufficient membership balance. Available: ₹${Number(membership.balance).toFixed(2)}` },
+        { status: 400 },
+      );
+  }
+
   const bill = await prisma.$transaction(async (tx) => {
     const newBill = await tx.bill.create({
       data: {
         customerId,
         date: billDate,
         totalAmount,
+        paymentMode,
         smsSent: false,
         items: {
           create: processedItems.map((i) => ({
@@ -167,30 +126,15 @@ export async function POST(request: Request) {
       },
     });
 
-    // 5. Create MembershipUsage records for membership services
-    if (membership) {
-      const membershipItems = processedItems.filter(
-        (i) => i.isMembershipService,
-      );
-      for (const mi of membershipItems) {
-        // Find the bill item that was just created for this service
-        const billItem = newBill.items.find(
-          (it) => it.serviceId === mi.serviceId && it.isMembershipService,
-        );
-        if (!billItem) continue;
-        await tx.membershipUsage.create({
-          data: {
-            membershipId: membership.id,
-            serviceId: mi.serviceId,
-            billItemId: billItem.id,
-            usedAt: billDate,
-          },
-        });
-      }
+    // Deduct from membership balance
+    if (paymentMode === "membership") {
+      await tx.membership.updateMany({
+        where: { customerId, isActive: true, expiryDate: { gte: now } },
+        data: { balance: { decrement: totalAmount } },
+      });
     }
 
-    // 6. Update smsSent flag
-    const updatedBill = await tx.bill.update({
+    return tx.bill.update({
       where: { id: newBill.id },
       data: { smsSent: true },
       include: {
@@ -203,13 +147,10 @@ export async function POST(request: Request) {
         customer: { select: { id: true, name: true, phone: true } },
       },
     });
-
-    return updatedBill;
   });
 
-  // 7. SMS placeholder
   console.log(
-    `[SMS] Bill #${bill.id} for customer ${customer.name} (${customer.phone}): Total ₹${totalAmount}. Thank you for visiting!`,
+    `[SMS] Bill #${bill.id} for ${customer.name} (${customer.phone}): ₹${totalAmount} via ${paymentMode}`,
   );
 
   return NextResponse.json(
@@ -218,6 +159,7 @@ export async function POST(request: Request) {
       date: bill.date.toISOString(),
       totalAmount: Number(bill.totalAmount),
       smsSent: bill.smsSent,
+      paymentMode: bill.paymentMode,
       createdAt: bill.createdAt.toISOString(),
       customer: bill.customer,
       items: bill.items.map((item) => ({

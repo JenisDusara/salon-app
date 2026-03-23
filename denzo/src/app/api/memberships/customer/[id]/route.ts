@@ -14,21 +14,10 @@ export async function GET(
 
   const now = new Date();
   const membership = await prisma.membership.findFirst({
-    where: {
-      customerId: numId,
-      isActive: true,
-      expiryDate: { gte: now },
-    },
+    where: { customerId: numId, isActive: true, expiryDate: { gte: now } },
     include: {
       customer: { select: { id: true, name: true, phone: true, email: true } },
-      plan: {
-        include: {
-          planServices: {
-            include: { service: { select: { id: true, name: true } } },
-          },
-        },
-      },
-      usages: true,
+      plan: true,
     },
   });
 
@@ -38,31 +27,22 @@ export async function GET(
       { status: 404 },
     );
 
-  const serviceUsage = membership.plan.planServices.map((ps) => {
-    const usedCount = membership.usages.filter(
-      (u) => u.serviceId === ps.serviceId,
-    ).length;
-    return {
-      serviceId: ps.serviceId,
-      serviceName: ps.service.name,
-      allowedCount: ps.allowedCount,
-      usedCount,
-      remaining: Math.max(0, ps.allowedCount - usedCount),
-    };
-  });
+  const totalBalance = Number(membership.plan.price) * (1 + membership.plan.bonusPercent / 100);
 
   return NextResponse.json({
     id: membership.id,
     isActive: membership.isActive,
     startDate: membership.startDate.toISOString(),
     expiryDate: membership.expiryDate.toISOString(),
+    balance: Number(membership.balance),
+    totalBalance,
     customer: membership.customer,
     plan: {
       id: membership.plan.id,
       name: membership.plan.name,
       price: Number(membership.plan.price),
+      bonusPercent: membership.plan.bonusPercent,
       validityDays: membership.plan.validityDays,
     },
-    serviceUsage,
   });
 }

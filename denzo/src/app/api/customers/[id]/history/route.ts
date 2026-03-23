@@ -42,6 +42,7 @@ export async function GET(
       id: bill.id,
       date: bill.date.toISOString(),
       totalAmount: Number(bill.totalAmount),
+      paymentMode: bill.paymentMode,
       smsSent: bill.smsSent,
       createdAt: bill.createdAt.toISOString(),
       items: bill.items.map((item) => ({

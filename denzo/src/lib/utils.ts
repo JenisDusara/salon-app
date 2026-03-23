@@ -50,6 +50,7 @@ export function getMonthRange() {
 }
 
 export const EXPENSE_CATEGORIES = [
+  "Salary",
   "Rent",
   "Electricity",
   "Products",
@@ -64,6 +65,7 @@ export const CATEGORY_COLORS: Record<
   string,
   { bg: string; text: string; border: string }
 > = {
+  Salary: { bg: "#fef3c7", text: "#92400e", border: "#fcd34d" },
   Rent: { bg: "#eff6ff", text: "#1d4ed8", border: "#bfdbfe" },
   Electricity: { bg: "#fffbeb", text: "#b45309", border: "#fde68a" },
   Products: { bg: "#f0fdf4", text: "#15803d", border: "#bbf7d0" },

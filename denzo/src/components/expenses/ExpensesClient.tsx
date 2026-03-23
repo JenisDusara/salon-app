@@ -17,9 +17,11 @@ import type { Expense, ExpenseSummary } from "@/types";
 export function ExpensesClient({
   initialExpenses,
   summary,
+  employees,
 }: {
   initialExpenses: Expense[];
   summary: ExpenseSummary;
+  employees: { id: number; name: string }[];
 }) {
   const router = useRouter();
   const [expenses, setExpenses] = useState(initialExpenses);
@@ -37,10 +39,11 @@ export function ExpensesClient({
     amount: "",
     description: "",
     date: "",
+    employeeId: "",
   });
 
   function openAdd() {
-    setForm({ category: "Other", amount: "", description: "", date: "" });
+    setForm({ category: "Other", amount: "", description: "", date: "", employeeId: "" });
     setEditExpense(null);
     setShowForm(true);
   }
@@ -50,6 +53,7 @@ export function ExpensesClient({
       amount: String(e.amount),
       description: e.description ?? "",
       date: e.date.split("T")[0],
+      employeeId: "",
     });
     setEditExpense(e);
     setShowForm(true);
@@ -64,6 +68,12 @@ export function ExpensesClient({
       toast.error("Enter a valid amount");
       return;
     }
+    if (form.category === "Salary" && !form.employeeId && !editExpense) {
+      toast.error("Select an employee for salary");
+      return;
+    }
+    const employee = employees.find((e) => e.id === parseInt(form.employeeId, 10));
+
     setSaving(true);
     try {
       if (editExpense) {
@@ -73,7 +83,7 @@ export function ExpensesClient({
           body: JSON.stringify({
             category: form.category,
             amount: Number(form.amount),
-            description: form.description || null,
+            description: form.category === "Salary" && employee ? `Salary - ${employee.name}` : form.description || null,
             date: form.date || undefined,
           }),
         });
@@ -90,7 +100,7 @@ export function ExpensesClient({
           body: JSON.stringify({
             category: form.category,
             amount: Number(form.amount),
-            description: form.description || null,
+            description: form.category === "Salary" && employee ? `Salary - ${employee.name}` : form.description || null,
             date: form.date || undefined,
           }),
         });
@@ -324,6 +334,23 @@ export function ExpensesClient({
               ))}
             </select>
           </div>
+          {form.category === "Salary" && (
+            <div>
+              <label className="text-[12px] font-medium text-slate-600 mb-1.5 block">
+                Employee *
+              </label>
+              <select
+                value={form.employeeId}
+                onChange={(e) => setForm({ ...form, employeeId: e.target.value })}
+                className="w-full h-9 rounded-lg border border-slate-200 bg-slate-50 px-3 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">Select employee</option>
+                {employees.map((e) => (
+                  <option key={e.id} value={e.id}>{e.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div>
             <label className="text-[12px] font-medium text-slate-600 mb-1.5 block">
               Amount (₹) *
@@ -338,19 +365,19 @@ export function ExpensesClient({
               className="w-full h-9 rounded-lg border border-slate-200 bg-slate-50 px-3 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
-          <div>
-            <label className="text-[12px] font-medium text-slate-600 mb-1.5 block">
-              Description <span className="text-slate-400">(optional)</span>
-            </label>
-            <input
-              value={form.description}
-              onChange={(e) =>
-                setForm({ ...form, description: e.target.value })
-              }
-              placeholder="Brief description"
-              className="w-full h-9 rounded-lg border border-slate-200 bg-slate-50 px-3 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
+          {form.category !== "Salary" && (
+            <div>
+              <label className="text-[12px] font-medium text-slate-600 mb-1.5 block">
+                Description <span className="text-slate-400">(optional)</span>
+              </label>
+              <input
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder="Brief description"
+                className="w-full h-9 rounded-lg border border-slate-200 bg-slate-50 px-3 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          )}
           <div>
             <label className="text-[12px] font-medium text-slate-600 mb-1.5 block">
               Date{" "}

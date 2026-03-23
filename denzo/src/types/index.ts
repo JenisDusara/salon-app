@@ -5,6 +5,7 @@ export interface Customer {
   email: string | null;
   createdAt: string;
   totalVisits: number;
+  membershipBalance?: number;
 }
 
 export interface Employee {
@@ -38,30 +39,17 @@ export interface Bill {
   date: string;
   totalAmount: number;
   smsSent: boolean;
+  paymentMode: string;
   items: BillItemData[];
-}
-
-export interface MembershipPlanServiceItem {
-  serviceId: number;
-  serviceName: string;
-  allowedCount: number;
 }
 
 export interface MembershipPlan {
   id: number;
   name: string;
   price: number;
+  bonusPercent: number;
   validityDays: number;
   isActive: boolean;
-  services: MembershipPlanServiceItem[];
-}
-
-export interface MembershipServiceUsage {
-  serviceId: number;
-  serviceName: string;
-  allowed: number;
-  used: number;
-  remaining: number;
 }
 
 export interface Membership {
@@ -74,7 +62,8 @@ export interface Membership {
   expiryDate: string;
   isActive: boolean;
   isExpired: boolean;
-  services: MembershipServiceUsage[];
+  balance: number;
+  totalBalance: number;
 }
 
 export interface Expense {

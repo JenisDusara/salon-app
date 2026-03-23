@@ -62,6 +62,13 @@ export async function DELETE(
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
 
   try {
+    const billCount = await prisma.billItem.count({ where: { serviceId: numId } });
+    if (billCount > 0)
+      return NextResponse.json(
+        { error: `Cannot delete — this service is used in ${billCount} bill(s)` },
+        { status: 400 },
+      );
+
     await prisma.service.delete({ where: { id: numId } });
     return NextResponse.json({ success: true });
   } catch {

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ChevronDown, Plus, Receipt, Search, UserPlus, X } from "lucide-react";
+import { ChevronDown, Phone, Plus, Receipt, UserPlus, Wallet, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -49,20 +49,27 @@ export function BillingClient({
     { _key: "0", serviceId: 0, employeeId: 0, price: 0 },
   ]);
   const [submitting, setSubmitting] = useState(false);
+  const [paymentMode, setPaymentMode] = useState<"cash" | "card" | "online" | "membership" | null>(null);
+  const [useMembership, setUseMembership] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Filter suggestions
+  // Filter suggestions by phone
   useEffect(() => {
     if (!customerQuery.trim()) {
       setSuggestions([]);
       return;
     }
-    const q = customerQuery.toLowerCase();
-    setSuggestions(
-      allCustomers
-        .filter((c) => c.name.toLowerCase().includes(q) || c.phone.includes(q))
-        .slice(0, 6),
-    );
+    const matched = allCustomers
+      .filter((c) => c.phone.includes(customerQuery))
+      .slice(0, 6);
+    setSuggestions(matched);
+
+    // Auto-open new customer form when 10 digits typed and no match found
+    if (customerQuery.length === 10 && matched.length === 0) {
+      setNewCustomerMode(true);
+      setNewPhone(customerQuery);
+      setShowSuggestions(false);
+    }
   }, [customerQuery, allCustomers]);
 
   // Close suggestions on outside click
@@ -81,6 +88,13 @@ export function BillingClient({
     setSuggestions([]);
     setShowSuggestions(false);
     setNewCustomerMode(false);
+    // Auto-enable membership if customer has balance
+    if (c.membershipBalance && c.membershipBalance > 0) {
+      setUseMembership(true);
+      setPaymentMode("membership");
+    } else {
+      setUseMembership(false);
+    }
   }
 
   function clearCustomer() {
@@ -89,6 +103,8 @@ export function BillingClient({
     setNewCustomerMode(false);
     setNewName("");
     setNewPhone("");
+    setUseMembership(false);
+    setPaymentMode(null);
   }
 
   function addLineItem() {
@@ -124,7 +140,8 @@ export function BillingClient({
   const isValid =
     (selectedCustomer ||
       (newCustomerMode && newName.trim() && newPhone.trim())) &&
-    lineItems.every((i) => i.serviceId && i.employeeId);
+    lineItems.every((i) => i.serviceId && i.employeeId) &&
+    paymentMode !== null;
 
   async function handleSubmit() {
     if (!isValid) {
@@ -155,6 +172,7 @@ export function BillingClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerId,
+          paymentMode,
           items: lineItems.map((i) => ({
             serviceId: i.serviceId,
             employeeId: i.employeeId,
@@ -173,6 +191,7 @@ export function BillingClient({
 
       // Reset form
       clearCustomer();
+      setPaymentMode(null);
       setLineItems([
         { _key: Date.now().toString(), serviceId: 0, employeeId: 0, price: 0 },
       ]);
@@ -202,28 +221,56 @@ export function BillingClient({
                 Customer *
               </label>
               {selectedCustomer ? (
-                <div className="flex items-center justify-between bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-[13px] font-bold">
-                      {selectedCustomer.name.charAt(0).toUpperCase()}
+                <>
+                  <div className="flex items-center justify-between bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-[13px] font-bold">
+                        {selectedCustomer.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-[13px] font-semibold text-indigo-800">
+                          {selectedCustomer.name}
+                        </p>
+                        <p className="text-[11px] text-indigo-600">
+                          {selectedCustomer.phone}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[13px] font-semibold text-indigo-800">
-                        {selectedCustomer.name}
-                      </p>
-                      <p className="text-[11px] text-indigo-600">
-                        {selectedCustomer.phone}
-                      </p>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={clearCustomer}
+                      className="text-indigo-400 hover:text-indigo-600 transition-colors"
+                    >
+                      <X size={15} />
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={clearCustomer}
-                    className="text-indigo-400 hover:text-indigo-600 transition-colors"
-                  >
-                    <X size={15} />
-                  </button>
-                </div>
+                  {/* Membership Balance Banner */}
+                  {selectedCustomer.membershipBalance !== undefined && selectedCustomer.membershipBalance > 0 && (
+                    <div className="mt-2 flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                      <div className="flex items-center gap-1.5">
+                        <Wallet size={12} className="text-emerald-600" />
+                        <span className="text-[11px] font-semibold text-emerald-700">
+                          Membership Balance: ₹{selectedCustomer.membershipBalance.toFixed(0)}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = !useMembership;
+                          setUseMembership(next);
+                          setPaymentMode(next ? "membership" : null);
+                        }}
+                        className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-colors ${
+                          useMembership
+                            ? "bg-emerald-600 border-emerald-600 text-white"
+                            : "bg-white border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                        }`}
+                      >
+                        {useMembership ? "✓ Using" : "Use"}
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : newCustomerMode ? (
                 <div className="border border-indigo-200 rounded-xl p-4 bg-indigo-50/40 space-y-3">
                   <div className="flex items-center justify-between">
@@ -255,18 +302,20 @@ export function BillingClient({
                 </div>
               ) : (
                 <div ref={searchRef} className="relative">
-                  <Search
+                  <Phone
                     size={14}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                   />
                   <input
                     value={customerQuery}
                     onChange={(e) => {
-                      setCustomerQuery(e.target.value);
+                      const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                      setCustomerQuery(val);
                       setShowSuggestions(true);
                     }}
                     onFocus={() => setShowSuggestions(true)}
-                    placeholder="Search by phone or name..."
+                    inputMode="numeric"
+                    placeholder="Enter phone number..."
                     className="w-full h-9 pl-8 pr-3 rounded-lg border border-slate-200 bg-slate-50 text-[13px] text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   />
                   {showSuggestions && customerQuery.trim() && (
@@ -438,6 +487,31 @@ export function BillingClient({
               </div>
             </div>
 
+            {/* Payment Mode */}
+            {!useMembership && (
+              <div>
+                <label className="text-[12px] font-medium text-slate-600 mb-1.5 block">
+                  Payment Mode *
+                </label>
+                <div className="flex gap-2">
+                  {(["cash", "card", "online"] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setPaymentMode(mode)}
+                      className={`flex-1 h-9 rounded-xl text-[12px] font-semibold border transition-colors capitalize ${
+                        paymentMode === mode
+                          ? "bg-indigo-600 border-indigo-600 text-white"
+                          : "bg-white border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600"
+                      }`}
+                    >
+                      {mode === "cash" ? "💵 Cash" : mode === "card" ? "💳 Card" : "📱 Online"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Total + Submit */}
             <div className="border-t border-slate-100 pt-4 space-y-3">
               <div className="flex items-center justify-between">
@@ -462,6 +536,7 @@ export function BillingClient({
             </div>
           </div>
         </div>
+
 
         {/* RIGHT - Recent Bills */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
@@ -491,9 +566,22 @@ export function BillingClient({
                 >
                   <div className="flex items-center justify-between mb-2.5">
                     <div>
-                      <p className="text-[13px] font-semibold text-slate-800">
-                        {bill.customerName}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[13px] font-semibold text-slate-800">
+                          {bill.customerName}
+                        </p>
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
+                          bill.paymentMode === "cash"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : bill.paymentMode === "card"
+                            ? "bg-blue-100 text-blue-700"
+                            : bill.paymentMode === "membership"
+                            ? "bg-indigo-100 text-indigo-700"
+                            : "bg-violet-100 text-violet-700"
+                        }`}>
+                          {bill.paymentMode === "cash" ? "💵 Cash" : bill.paymentMode === "card" ? "💳 Card" : bill.paymentMode === "membership" ? "🎫 Membership" : "📱 Online"}
+                        </span>
+                      </div>
                       <p className="text-[11px] text-slate-400">
                         {formatDate(bill.date)}
                       </p>

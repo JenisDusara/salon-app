@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import {
   CreditCard,
+  History,
   LayoutDashboard,
   LogOut,
   Megaphone,
@@ -25,6 +26,7 @@ const navItems = [
   { href: "/services", icon: Scissors, label: "Services" },
   { href: "/memberships", icon: CreditCard, label: "Memberships" },
   { href: "/expenses", icon: TrendingDown, label: "Expenses" },
+  { href: "/payment-history", icon: History, label: "Payment History" },
   { href: "/marketing", icon: Megaphone, label: "Marketing" },
 ];
 
