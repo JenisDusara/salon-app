@@ -100,6 +100,18 @@ export interface PeriodStats {
   profit: number;
 }
 
+export interface PaymentBreakdown {
+  cash: number;
+  card: number;
+  online: number;
+  membership: number;
+}
+
+export interface DayRevenue {
+  label: string;
+  income: number;
+}
+
 export interface DashboardData {
   today: PeriodStats;
   monthly: PeriodStats;
@@ -107,6 +119,9 @@ export interface DashboardData {
   totalCustomers: number;
   labourIncome: LabourIncome[];
   todayMembershipActivity: MembershipActivity[];
+  todayBreakdown: PaymentBreakdown;
+  monthlyBreakdown: PaymentBreakdown;
+  last7Days: DayRevenue[];
 }
 
 export interface SmsCampaign {

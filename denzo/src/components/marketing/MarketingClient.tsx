@@ -49,9 +49,15 @@ export function MarketingClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: message.trim() }),
       });
-      if (!res.ok) throw new Error("Failed to send");
       const json = await res.json();
-      toast.success(`SMS sent to ${json.sent} customers!`);
+      if (!res.ok) throw new Error(json.error ?? "Failed to send");
+      if (json.failed > 0 && json.sent === 0) {
+        toast.error(`SMS failed to send. Check API key.`);
+      } else if (json.failed > 0) {
+        toast.success(`SMS sent to ${json.sent} customers (${json.failed} failed)`);
+      } else {
+        toast.success(`SMS sent to ${json.sent} customers!`);
+      }
       setCampaigns((prev) => [
         {
           id: json.campaignId ?? Date.now(),

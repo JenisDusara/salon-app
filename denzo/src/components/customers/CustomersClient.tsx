@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { History, PenLine, Plus, Search, Users, X } from "lucide-react";
+import { History, PenLine, Plus, Search, Trash2, Users, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -46,6 +46,8 @@ export function CustomersClient({
   const [historyLoading, setHistoryLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", email: "" });
+  const [deleteCustomer, setDeleteCustomer] = useState<Customer | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const filtered = customers.filter(
@@ -131,6 +133,23 @@ export function CustomersClient({
       toast.error(e instanceof Error ? e.message : "Failed to save");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!deleteCustomer) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/customers/${deleteCustomer.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      setCustomers((prev) => prev.filter((c) => c.id !== deleteCustomer.id));
+      toast.success(`${deleteCustomer.name} deleted`);
+      setDeleteCustomer(null);
+      router.refresh();
+    } catch {
+      toast.error("Failed to delete customer");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -273,6 +292,14 @@ export function CustomersClient({
                           >
                             <PenLine size={13} />
                             Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteCustomer(c)}
+                            className="flex items-center gap-1.5 text-[12px] text-rose-400 hover:text-rose-600 font-medium transition-colors px-2 py-1 rounded-lg hover:bg-rose-50"
+                          >
+                            <Trash2 size={13} />
+                            Delete
                           </button>
                         </div>
                       </td>
@@ -429,6 +456,46 @@ export function CustomersClient({
             )}
           </div>
         ) : null}
+      </Modal>
+      {/* Delete Confirm Modal */}
+      <Modal
+        isOpen={!!deleteCustomer}
+        onClose={() => setDeleteCustomer(null)}
+        title="Delete Customer"
+        size="sm"
+      >
+        {deleteCustomer && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 p-3 bg-rose-50 rounded-xl border border-rose-100">
+              <div className="w-9 h-9 rounded-full bg-rose-100 flex items-center justify-center flex-shrink-0">
+                <Trash2 size={16} className="text-rose-500" />
+              </div>
+              <div>
+                <p className="text-[13px] font-semibold text-slate-800">{deleteCustomer.name}</p>
+                <p className="text-[11px] text-slate-500">{deleteCustomer.phone}</p>
+              </div>
+            </div>
+            <p className="text-[13px] text-slate-600">
+              Deleting this customer will permanently remove all their bills and membership.{" "}
+              <span className="font-semibold text-rose-600">This action cannot be undone.</span>
+            </p>
+            <div className="flex gap-2 pt-1">
+              <Button variant="ghost" size="md" className="flex-1" onClick={() => setDeleteCustomer(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                size="md"
+                className="flex-1"
+                onClick={handleDelete}
+                loading={deleting}
+              >
+                <Trash2 size={14} />
+                Yes, Delete
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </PageTransition>
   );

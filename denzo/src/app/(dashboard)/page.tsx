@@ -3,10 +3,32 @@ export const dynamic = "force-dynamic";
 import { DashboardClient } from "@/components/dashboard/DashboardClient";
 import { prisma } from "@/lib/prisma";
 import { getMonthRange, getTodayRange } from "@/lib/utils";
+import type { PaymentBreakdown } from "@/types";
+
+function toBreakdown(groups: { paymentMode: string; _sum: { totalAmount: unknown } }[]): PaymentBreakdown {
+  const result: PaymentBreakdown = { cash: 0, card: 0, online: 0, membership: 0 };
+  for (const g of groups) {
+    const mode = g.paymentMode as keyof PaymentBreakdown;
+    if (mode in result) result[mode] = Number(g._sum.totalAmount ?? 0);
+  }
+  return result;
+}
 
 export default async function DashboardPage() {
   const { start: todayStart, end: todayEnd } = getTodayRange();
   const { start: monthStart, end: monthEnd } = getMonthRange();
+
+  // Build last 7 days date ranges
+  const last7Ranges = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    const start = new Date(d);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(d);
+    end.setHours(23, 59, 59, 999);
+    const label = d.toLocaleDateString("en-IN", { weekday: "short" });
+    return { start, end, label };
+  });
 
   const [
     todayIncomeAgg,
@@ -18,6 +40,8 @@ export default async function DashboardPage() {
     totalCustomers,
     employees,
     todayBills,
+    todayBreakdownRaw,
+    monthlyBreakdownRaw,
   ] = await Promise.all([
     prisma.bill.aggregate({
       _sum: { totalAmount: true },
@@ -49,8 +73,30 @@ export default async function DashboardPage() {
         },
       },
     }),
+    prisma.bill.groupBy({
+      by: ["paymentMode"],
+      _sum: { totalAmount: true },
+      where: { date: { gte: todayStart, lte: todayEnd } },
+    }),
+    prisma.bill.groupBy({
+      by: ["paymentMode"],
+      _sum: { totalAmount: true },
+      where: { date: { gte: monthStart, lte: monthEnd } },
+    }),
   ]);
 
+  // Last 7 days revenue
+  const last7Days = await Promise.all(
+    last7Ranges.map(async ({ start, end, label }) => {
+      const agg = await prisma.bill.aggregate({
+        _sum: { totalAmount: true },
+        where: { date: { gte: start, lte: end } },
+      });
+      return { label, income: Number(agg._sum.totalAmount ?? 0) };
+    }),
+  );
+
+  // Labour income per employee
   const labourIncome = await Promise.all(
     employees.map(async (emp) => {
       const [incAgg, svcCount] = await Promise.all([
@@ -93,6 +139,9 @@ export default async function DashboardPage() {
         totalCustomers,
         labourIncome,
         todayMembershipActivity,
+        todayBreakdown: toBreakdown(todayBreakdownRaw),
+        monthlyBreakdown: toBreakdown(monthlyBreakdownRaw),
+        last7Days,
       }}
     />
   );

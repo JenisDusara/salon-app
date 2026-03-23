@@ -13,30 +13,62 @@ export async function POST(request: Request) {
     select: { id: true, name: true, phone: true },
   });
 
-  const count = customers.length;
+  if (customers.length === 0)
+    return NextResponse.json({ success: true, sent: 0, failed: 0, total: 0 });
 
-  // 2. Log SMS for each customer
-  for (const customer of customers) {
-    console.log(
-      `[SMS] To: ${customer.phone} (${customer.name}) | Message: ${message}`,
-    );
+  const apiKey = process.env.FAST2SMS_API_KEY;
+  let sent = 0;
+  let failed = 0;
+
+  if (apiKey) {
+    // Fast2SMS bulk — send all numbers in one API call (comma-separated)
+    const numbers = customers.map((c) => c.phone).join(",");
+    try {
+      const smsRes = await fetch("https://www.fast2sms.com/dev/bulkV2", {
+        method: "POST",
+        headers: {
+          authorization: apiKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          route: "q",
+          message,
+          language: "english",
+          flash: 0,
+          numbers,
+        }),
+      });
+      const smsData = await smsRes.json();
+      if (smsData.return) {
+        sent = customers.length;
+        console.log("[Marketing SMS] Bulk sent. Request ID:", smsData.request_id);
+      } else {
+        failed = customers.length;
+        console.error("[Marketing SMS] Fast2SMS error:", smsData);
+      }
+    } catch (err) {
+      failed = customers.length;
+      console.error("[Marketing SMS] Failed:", err);
+    }
+  } else {
+    console.warn("[Marketing SMS] FAST2SMS_API_KEY not set");
+    failed = customers.length;
   }
 
-  // 3. Create SmsCampaign record
+  // Create SmsCampaign record
   const campaign = await prisma.smsCampaign.create({
     data: {
       message,
-      recipientCount: count,
+      recipientCount: sent,
       sentAt: new Date(),
     },
   });
 
-  // 4. Return result
   return NextResponse.json({
-    success: true,
-    sent: count,
-    failed: 0,
-    total: count,
+    success: sent > 0,
+    sent,
+    failed,
+    total: customers.length,
     campaignId: campaign.id,
   });
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ChevronDown, Phone, Plus, Receipt, UserPlus, Wallet, X } from "lucide-react";
+import { ChevronDown, MessageSquare, Phone, Plus, Receipt, UserPlus, Wallet, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -51,6 +51,7 @@ export function BillingClient({
   const [submitting, setSubmitting] = useState(false);
   const [paymentMode, setPaymentMode] = useState<"cash" | "card" | "online" | "membership" | null>(null);
   const [useMembership, setUseMembership] = useState(false);
+  const [sendSms, setSendSms] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Filter suggestions by phone
@@ -82,6 +83,10 @@ export function BillingClient({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const isMembershipCustomer =
+    selectedCustomer?.membershipBalance !== undefined &&
+    selectedCustomer.membershipBalance > 0;
+
   function selectCustomer(c: Customer) {
     setSelectedCustomer(c);
     setCustomerQuery("");
@@ -92,8 +97,10 @@ export function BillingClient({
     if (c.membershipBalance && c.membershipBalance > 0) {
       setUseMembership(true);
       setPaymentMode("membership");
+      setSendSms(true); // Compulsory SMS for membership
     } else {
       setUseMembership(false);
+      setSendSms(false);
     }
   }
 
@@ -105,6 +112,7 @@ export function BillingClient({
     setNewPhone("");
     setUseMembership(false);
     setPaymentMode(null);
+    setSendSms(false);
   }
 
   function addLineItem() {
@@ -173,6 +181,7 @@ export function BillingClient({
         body: JSON.stringify({
           customerId,
           paymentMode,
+          sendSms,
           items: lineItems.map((i) => ({
             serviceId: i.serviceId,
             employeeId: i.employeeId,
@@ -186,7 +195,7 @@ export function BillingClient({
       }
       const newBill = await res.json();
 
-      toast.success("Bill created! SMS sent ✓");
+      toast.success(sendSms ? "Bill created! SMS sent ✓" : "Bill created!");
       setBills((prev) => [newBill, ...prev.slice(0, 14)]);
 
       // Reset form
@@ -512,7 +521,7 @@ export function BillingClient({
               </div>
             )}
 
-            {/* Total + Submit */}
+            {/* Total + SMS Toggle + Submit */}
             <div className="border-t border-slate-100 pt-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[13px] font-medium text-slate-600">
@@ -522,6 +531,33 @@ export function BillingClient({
                   {formatCurrency(total)}
                 </span>
               </div>
+
+              {/* SMS Checkbox */}
+              <label
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-colors cursor-pointer ${
+                  sendSms
+                    ? "bg-sky-50 border-sky-200"
+                    : "bg-slate-50 border-slate-200 hover:border-slate-300"
+                } ${isMembershipCustomer ? "opacity-80 cursor-not-allowed" : ""}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={sendSms}
+                  disabled={isMembershipCustomer}
+                  onChange={(e) => setSendSms(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 accent-sky-600"
+                />
+                <MessageSquare size={14} className={sendSms ? "text-sky-600" : "text-slate-400"} />
+                <span className={`text-[12px] font-medium ${sendSms ? "text-sky-700" : "text-slate-600"}`}>
+                  Send SMS to customer
+                </span>
+                {isMembershipCustomer && (
+                  <span className="text-[10px] font-semibold bg-sky-100 text-sky-600 px-1.5 py-0.5 rounded ml-auto">
+                    Required
+                  </span>
+                )}
+              </label>
+
               <Button
                 variant="primary"
                 size="lg"
@@ -531,7 +567,7 @@ export function BillingClient({
                 disabled={!isValid}
               >
                 <Receipt size={15} />
-                Create Bill &amp; Send SMS
+                {sendSms ? "Create Bill & Send SMS" : "Create Bill"}
               </Button>
             </div>
           </div>

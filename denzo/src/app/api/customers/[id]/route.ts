@@ -61,3 +61,26 @@ export async function PUT(
     return NextResponse.json({ error: "Customer not found" }, { status: 404 });
   }
 }
+
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const numId = parseInt(id, 10);
+  if (Number.isNaN(numId))
+    return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+
+  try {
+    // Delete related records first
+    await prisma.billItem.deleteMany({
+      where: { bill: { customerId: numId } },
+    });
+    await prisma.bill.deleteMany({ where: { customerId: numId } });
+    await prisma.membership.deleteMany({ where: { customerId: numId } });
+    await prisma.customer.delete({ where: { id: numId } });
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "Customer not found" }, { status: 404 });
+  }
+}

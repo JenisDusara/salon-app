@@ -25,6 +25,12 @@ export async function GET(
       bill: {
         include: {
           customer: { select: { name: true } },
+          items: {
+            include: {
+              service: { select: { id: true, name: true } },
+              employee: { select: { id: true, name: true } },
+            },
+          },
         },
       },
     },
@@ -42,6 +48,16 @@ export async function GET(
     serviceName: item.service.name,
     customerName: item.bill.customer.name,
     price: Number(item.price),
+    billId: item.bill.id,
+    paymentMode: item.bill.paymentMode,
+    billTotal: Number(item.bill.totalAmount),
+    billItems: item.bill.items.map((bi) => ({
+      id: bi.id,
+      serviceName: bi.service.name,
+      employeeName: bi.employee.name,
+      price: Number(bi.price),
+      isMembershipService: bi.isMembershipService,
+    })),
   }));
 
   return NextResponse.json({

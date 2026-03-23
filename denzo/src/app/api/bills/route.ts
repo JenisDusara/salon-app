@@ -40,11 +40,12 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const { customerId, items, date, paymentMode } = body as {
+  const { customerId, items, date, paymentMode, sendSms } = body as {
     customerId: number;
     items: { serviceId: number; employeeId: number; price?: number }[];
     date?: string;
     paymentMode: string;
+    sendSms?: boolean;
   };
 
   if (!paymentMode || !["cash", "card", "online", "membership"].includes(paymentMode))
@@ -98,6 +99,8 @@ export async function POST(request: Request) {
       );
   }
 
+  const shouldSendSms = sendSms ?? false;
+
   const bill = await prisma.$transaction(async (tx) => {
     const newBill = await tx.bill.create({
       data: {
@@ -105,7 +108,7 @@ export async function POST(request: Request) {
         date: billDate,
         totalAmount,
         paymentMode,
-        smsSent: false,
+        smsSent: shouldSendSms,
         items: {
           create: processedItems.map((i) => ({
             serviceId: i.serviceId,
@@ -134,24 +137,77 @@ export async function POST(request: Request) {
       });
     }
 
-    return tx.bill.update({
-      where: { id: newBill.id },
-      data: { smsSent: true },
-      include: {
-        items: {
-          include: {
-            service: { select: { id: true, name: true } },
-            employee: { select: { id: true, name: true } },
-          },
-        },
-        customer: { select: { id: true, name: true, phone: true } },
-      },
-    });
+    return newBill;
   });
 
-  console.log(
-    `[SMS] Bill #${bill.id} for ${customer.name} (${customer.phone}): ₹${totalAmount} via ${paymentMode}`,
-  );
+  if (shouldSendSms) {
+    const serviceNames = bill.items.map((i) => i.service.name).join(", ");
+    const dateStr = billDate.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+    const paymentLabel =
+      paymentMode.charAt(0).toUpperCase() + paymentMode.slice(1);
+
+    let smsMessage: string;
+
+    if (paymentMode === "membership") {
+      const updatedMembership = await prisma.membership.findFirst({
+        where: { customerId, isActive: true, expiryDate: { gte: now } },
+      });
+      const remaining = updatedMembership
+        ? Number(updatedMembership.balance)
+        : 0;
+      smsMessage =
+        `Dear ${customer.name},\n` +
+        `Thank you for visiting Denzo Salon!\n\n` +
+        `Services: ${serviceNames}\n` +
+        `Service Cost: \u20B9${totalAmount}\n` +
+        `Membership Balance: \u20B9${remaining} remaining\n\n` +
+        `Date: ${dateStr}\n` +
+        `- Team Denzo`;
+    } else {
+      smsMessage =
+        `Dear ${customer.name},\n` +
+        `Thank you for visiting Denzo Salon!\n\n` +
+        `Services: ${serviceNames}\n` +
+        `Total: \u20B9${totalAmount} | Paid via ${paymentLabel}\n\n` +
+        `Date: ${dateStr}\n` +
+        `- Team Denzo`;
+    }
+
+    // Send SMS via Fast2SMS
+    try {
+      const apiKey = process.env.FAST2SMS_API_KEY;
+      if (apiKey) {
+        const smsRes = await fetch("https://www.fast2sms.com/dev/bulkV2", {
+          method: "POST",
+          headers: {
+            authorization: apiKey,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            route: "q",
+            message: smsMessage,
+            language: "english",
+            flash: 0,
+            numbers: customer.phone,
+          }),
+        });
+        const smsData = await smsRes.json();
+        if (!smsData.return) {
+          console.error("[SMS] Fast2SMS error:", smsData);
+        } else {
+          console.log("[SMS] Sent to", customer.phone, "| Request ID:", smsData.request_id);
+        }
+      } else {
+        console.warn("[SMS] FAST2SMS_API_KEY not set");
+      }
+    } catch (smsErr) {
+      console.error("[SMS] Failed to send:", smsErr);
+    }
+  }
 
   return NextResponse.json(
     {

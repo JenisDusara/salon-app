@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import {
-  ChevronRight,
+  ChevronDown,
   PenLine,
   Plus,
   TrendingUp,
@@ -54,6 +54,7 @@ export function EmployeesClient({
   const [reportEmployee, setReportEmployee] = useState<Employee | null>(null);
   const [report, setReport] = useState<EmployeeReport | null>(null);
   const [loadingReport, setLoadingReport] = useState(false);
+  const [selectedService, setSelectedService] = useState<string | null>(null);
 
   function openAdd() {
     const today = new Date().toISOString().split("T")[0];
@@ -144,6 +145,7 @@ export function EmployeesClient({
     setReportEmployee(e);
     setReport(null);
     setLoadingReport(true);
+    setSelectedService(null);
     try {
       const res = await fetch(`/api/employees/${e.id}/report`);
       if (!res.ok) throw new Error();
@@ -404,80 +406,178 @@ export function EmployeesClient({
                 {loadingReport ? (
                   <div className="space-y-3">
                     {[1, 2, 3].map((n) => (
-                      <div
-                        key={n}
-                        className="h-10 rounded-lg bg-slate-100 animate-pulse"
-                      />
+                      <div key={n} className="h-10 rounded-lg bg-slate-100 animate-pulse" />
                     ))}
                   </div>
                 ) : report ? (
-                  <div className="space-y-5">
-                    {/* Summary grid */}
-                    <div className="grid grid-cols-2 gap-3">
-                      {[
-                        {
-                          label: "Services Done",
-                          value: report.totalServices,
-                          currency: false,
-                        },
-                        {
-                          label: "Revenue",
-                          value: report.totalIncome,
-                          currency: true,
-                        },
-                      ].map((m) => (
-                        <div
-                          key={m.label}
-                          className="bg-slate-50 rounded-xl p-3 text-center"
-                        >
-                          <p className="text-[20px] font-bold text-indigo-600">
-                            {m.currency
-                              ? formatCurrency(m.value)
-                              : m.value.toLocaleString("en-IN")}
-                          </p>
-                          <p className="text-[10px] text-slate-500 mt-0.5">
-                            {m.label}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
+                  (() => {
+                    // Group service history by service name
+                    const serviceGroups = report.serviceHistory.reduce(
+                      (acc, h) => {
+                        if (!acc[h.serviceName]) acc[h.serviceName] = [];
+                        acc[h.serviceName].push(h);
+                        return acc;
+                      },
+                      {} as Record<string, typeof report.serviceHistory>,
+                    );
+                    const sortedServices = Object.entries(serviceGroups).sort(
+                      (a, b) => b[1].length - a[1].length,
+                    );
+                    const selectedItems = selectedService
+                      ? (serviceGroups[selectedService] ?? [])
+                      : [];
 
-                    {/* Service history */}
-                    {report.serviceHistory &&
-                      report.serviceHistory.length > 0 && (
-                        <div>
-                          <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-2">
-                            Recent Services
-                          </p>
-                          <div className="space-y-1.5">
-                            {report.serviceHistory.slice(0, 8).map((h, idx) => (
-                              <div
-                                key={idx}
-                                className="flex items-center justify-between py-2 px-3 bg-slate-50 rounded-lg"
-                              >
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <ChevronRight
-                                    size={12}
-                                    className="text-indigo-400 flex-shrink-0"
-                                  />
-                                  <div className="min-w-0">
-                                    <p className="text-[12px] font-medium text-slate-700 truncate">
-                                      {h.serviceName}
-                                    </p>
-                                    <p className="text-[11px] text-slate-400 truncate">
-                                      {h.customerName} · {formatDate(h.date)}
-                                    </p>
-                                  </div>
-                                </div>
-                                <span className="text-[12px] font-semibold text-slate-800 ml-2 flex-shrink-0">
-                                  {formatCurrency(h.price)}
-                                </span>
-                              </div>
-                            ))}
+                    return (
+                      <div className="space-y-5">
+                        {/* Summary */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-indigo-50 rounded-xl p-3 text-center">
+                            <p className="text-[22px] font-bold text-indigo-600">
+                              {report.totalServices}
+                            </p>
+                            <p className="text-[10px] text-indigo-500 mt-0.5 font-medium">
+                              Services Done
+                            </p>
+                          </div>
+                          <div className="bg-emerald-50 rounded-xl p-3 text-center">
+                            <p className="text-[22px] font-bold text-emerald-600">
+                              {formatCurrency(report.totalIncome)}
+                            </p>
+                            <p className="text-[10px] text-emerald-500 mt-0.5 font-medium">
+                              Revenue Earned
+                            </p>
                           </div>
                         </div>
-                      )}
-                  </div>
+
+                        {/* Service type buttons */}
+                        {sortedServices.length > 0 && (
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">
+                              Services — tap to see customers
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {sortedServices.map(([name, items]) => {
+                                const isSelected = selectedService === name;
+                                const revenue = items.reduce(
+                                  (s, h) => s + h.price,
+                                  0,
+                                );
+                                return (
+                                  <button
+                                    key={name}
+                                    type="button"
+                                    suppressHydrationWarning
+                                    onClick={() =>
+                                      setSelectedService(
+                                        isSelected ? null : name,
+                                      )
+                                    }
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-left transition-all ${
+                                      isSelected
+                                        ? "bg-indigo-600 border-indigo-600 text-white"
+                                        : "bg-slate-50 border-slate-200 text-slate-700 hover:border-indigo-300 hover:bg-indigo-50"
+                                    }`}
+                                  >
+                                    <span className="text-[12px] font-semibold">
+                                      {name}
+                                    </span>
+                                    <span
+                                      className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
+                                        isSelected
+                                          ? "bg-white/20 text-white"
+                                          : "bg-indigo-100 text-indigo-600"
+                                      }`}
+                                    >
+                                      ×{items.length}
+                                    </span>
+                                    <span
+                                      className={`text-[11px] font-semibold ${
+                                        isSelected
+                                          ? "text-indigo-200"
+                                          : "text-slate-400"
+                                      }`}
+                                    >
+                                      {formatCurrency(revenue)}
+                                    </span>
+                                    <motion.div
+                                      animate={{ rotate: isSelected ? 180 : 0 }}
+                                      transition={{ duration: 0.15 }}
+                                    >
+                                      <ChevronDown
+                                        size={13}
+                                        className={
+                                          isSelected
+                                            ? "text-white"
+                                            : "text-slate-400"
+                                        }
+                                      />
+                                    </motion.div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Customer list for selected service */}
+                        <AnimatePresence>
+                          {selectedService && selectedItems.length > 0 && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -4 }}
+                              transition={{ duration: 0.18 }}
+                              className="rounded-xl border border-indigo-100 overflow-hidden"
+                            >
+                              {/* Header */}
+                              <div className="bg-indigo-50 px-4 py-2.5 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                                  <p className="text-[12px] font-bold text-indigo-700">
+                                    {selectedService}
+                                  </p>
+                                </div>
+                                <p className="text-[11px] text-indigo-500 font-medium">
+                                  {selectedItems.length} customer
+                                  {selectedItems.length > 1 ? "s" : ""}
+                                </p>
+                              </div>
+
+                              {/* Customer rows */}
+                              <div className="divide-y divide-slate-50 max-h-56 overflow-y-auto">
+                                {selectedItems.map((h, i) => (
+                                  <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, x: -6 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: i * 0.04 }}
+                                    className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors"
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                      <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-[11px] font-bold text-indigo-600 flex-shrink-0">
+                                        {h.customerName.charAt(0).toUpperCase()}
+                                      </div>
+                                      <div className="min-w-0">
+                                        <p className="text-[13px] font-semibold text-slate-800 truncate">
+                                          {h.customerName}
+                                        </p>
+                                        <p className="text-[11px] text-slate-400">
+                                          {formatDate(h.date)}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <span className="text-[13px] font-bold text-slate-700 flex-shrink-0 ml-3">
+                                      {formatCurrency(h.price)}
+                                    </span>
+                                  </motion.div>
+                                ))}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })()
                 ) : (
                   <p className="text-[13px] text-slate-400 text-center py-8">
                     No data available
