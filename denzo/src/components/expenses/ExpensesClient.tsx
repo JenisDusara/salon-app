@@ -43,7 +43,8 @@ export function ExpensesClient({
   });
 
   function openAdd() {
-    setForm({ category: "Other", amount: "", description: "", date: "", employeeId: "" });
+    const today = new Date().toISOString().split("T")[0];
+    setForm({ category: "Other", amount: "", description: "", date: today, employeeId: "" });
     setEditExpense(null);
     setShowForm(true);
   }
