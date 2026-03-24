@@ -139,18 +139,14 @@ export function Sidebar({ isOpen = false, onClose, adminName = "Admin" }: Sideba
         style={{ background: "var(--sidebar)" }}
       >
         {/* Logo */}
-        <div className="px-5 py-6 border-b flex items-center justify-between" style={{ borderColor: "var(--sidebar-border)" }}>
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
-              <Scissors size={18} color="white" />
-            </div>
-            <div>
-              <p className="text-white font-bold text-[16px] leading-tight tracking-widest">DENZO</p>
-              <p className="text-[11px]" style={{ color: "#6b7280" }}>Management Suite</p>
-            </div>
+        <div className="relative border-b flex items-center justify-between px-9 py-2" style={{ borderColor: "var(--sidebar-border)", background: "#ffffff" }}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }} className="flex-0 flex items-center justify-center">
+            <img src="/image.png" alt="Denzo Man's Salon" className="h-10 w-auto object-contain" style={{ display: "block", maxWidth: "180px" }} />
           </motion.div>
-          <button type="button" suppressHydrationWarning onClick={onClose} className="md:hidden p-1.5 rounded-lg hover:bg-white/5 transition-colors" style={{ color: "#6b7280" }}>
-            <X size={18} />
+          <button type="button" suppressHydrationWarning onClick={onClose}
+            className="md:hidden w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors flex-shrink-0"
+            style={{ color: "#374151" }}>
+            <X size={25} />
           </button>
         </div>
 

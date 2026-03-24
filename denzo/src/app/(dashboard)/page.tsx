@@ -88,11 +88,21 @@ export default async function DashboardPage() {
   // Last 7 days revenue
   const last7Days = await Promise.all(
     last7Ranges.map(async ({ start, end, label }) => {
-      const agg = await prisma.bill.aggregate({
-        _sum: { totalAmount: true },
-        where: { date: { gte: start, lte: end } },
-      });
-      return { label, income: Number(agg._sum.totalAmount ?? 0) };
+      const [incAgg, expAgg] = await Promise.all([
+        prisma.bill.aggregate({
+          _sum: { totalAmount: true },
+          where: { date: { gte: start, lte: end } },
+        }),
+        prisma.expense.aggregate({
+          _sum: { amount: true },
+          where: { date: { gte: start, lte: end } },
+        }),
+      ]);
+      return {
+        label,
+        income: Number(incAgg._sum.totalAmount ?? 0),
+        expenses: Number(expAgg._sum.amount ?? 0),
+      };
     }),
   );
 

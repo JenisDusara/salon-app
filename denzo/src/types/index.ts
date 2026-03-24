@@ -110,6 +110,7 @@ export interface PaymentBreakdown {
 export interface DayRevenue {
   label: string;
   income: number;
+  expenses: number;
 }
 
 export interface DashboardData {
