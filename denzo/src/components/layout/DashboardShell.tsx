@@ -1,16 +1,23 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [adminName, setAdminName] = useState("Admin");
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => { if (d.admin?.username) setAdminName(d.admin.username); })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="flex bg-slate-100 min-h-screen">
-      {/* Mobile backdrop overlay */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
@@ -24,7 +31,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         )}
       </AnimatePresence>
 
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} adminName={adminName} />
 
       <div className="flex flex-col flex-1 min-h-screen md:ml-[240px]">
         <TopBar onMenuClick={() => setSidebarOpen(true)} />

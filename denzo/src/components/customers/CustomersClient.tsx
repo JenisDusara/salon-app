@@ -91,6 +91,10 @@ export function CustomersClient({
       toast.error("Name and phone are required");
       return;
     }
+    if (/^\d+$/.test(form.name.trim())) {
+      toast.error("Name must contain letters, not just numbers");
+      return;
+    }
     setSaving(true);
     try {
       if (editCustomer) {
@@ -335,7 +339,10 @@ export function CustomersClient({
             </label>
             <input
               value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              onChange={(e) => {
+                const val = e.target.value.replace(/[^a-zA-Z\u0900-\u097F\s]/g, "");
+                setForm({ ...form, name: val });
+              }}
               placeholder="Customer name"
               className="w-full h-9 rounded-lg border border-slate-200 bg-slate-50 px-3 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />

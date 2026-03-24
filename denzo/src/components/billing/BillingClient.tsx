@@ -156,6 +156,10 @@ export function BillingClient({
       toast.error("Please fill all required fields");
       return;
     }
+    if (newCustomerMode && /^\d+$/.test(newName.trim())) {
+      toast.error("Customer name must contain letters, not just numbers");
+      return;
+    }
     setSubmitting(true);
     try {
       let customerId = selectedCustomer?.id;
@@ -297,7 +301,10 @@ export function BillingClient({
                   </div>
                   <input
                     value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^a-zA-Z\u0900-\u097F\s]/g, "");
+                      setNewName(val);
+                    }}
                     placeholder="Full Name *"
                     className="w-full h-8 rounded-lg border border-slate-200 bg-white px-3 text-[12px] focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
