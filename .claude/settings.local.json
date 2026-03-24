@@ -4,7 +4,8 @@
       "Bash(npx next:*)",
       "Bash(npx prisma:*)",
       "Bash(grep -r \"middleware\\\\|verifyToken\\\\|signToken\" c:UsersJenishDesktopsalon-appdenzosrc --include=*.ts --include=*.tsx)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(del \"c:\\\\Users\\\\Jenish\\\\Desktop\\\\salon-app\\\\denzo\\\\src\\\\middleware.ts\")"
     ]
   }
 }
