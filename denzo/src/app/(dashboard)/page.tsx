@@ -64,13 +64,10 @@ export default async function DashboardPage() {
     prisma.customer.count(),
     prisma.employee.findMany({ where: { isActive: true } }),
     prisma.bill.findMany({
-      where: { date: { gte: todayStart, lte: todayEnd } },
+      where: { date: { gte: todayStart, lte: todayEnd }, paymentMode: "membership" },
       include: {
         customer: { include: { membership: { include: { plan: true } } } },
-        items: {
-          where: { isMembershipService: true },
-          include: { service: true },
-        },
+        items: { include: { service: true } },
       },
     }),
     prisma.bill.groupBy({
@@ -106,6 +103,27 @@ export default async function DashboardPage() {
     }),
   );
 
+  // Active memberships
+  const membershipsRaw = await prisma.membership.findMany({
+    include: { customer: true, plan: true },
+    orderBy: { id: "desc" },
+  });
+
+  const activeMemberships = membershipsRaw.map((m) => {
+    const isExpired = new Date() > m.expiryDate;
+    const totalBalance = Number(m.plan.price) * (1 + m.plan.bonusPercent / 100);
+    return {
+      id: m.id,
+      customerName: m.customer.name,
+      planName: m.plan.name,
+      expiryDate: m.expiryDate.toISOString(),
+      balance: Number(m.balance),
+      totalBalance,
+      isActive: m.isActive,
+      isExpired,
+    };
+  });
+
   // Labour income per employee
   const labourIncome = await Promise.all(
     employees.map(async (emp) => {
@@ -125,13 +143,11 @@ export default async function DashboardPage() {
     }),
   );
 
-  const todayMembershipActivity = todayBills
-    .filter((b) => b.items.length > 0)
-    .map((b) => ({
-      customerName: b.customer.name,
-      planName: b.customer.membership?.plan.name ?? "Unknown Plan",
-      servicesUsed: b.items.map((i) => i.service.name),
-    }));
+  const todayMembershipActivity = todayBills.map((b) => ({
+    customerName: b.customer.name,
+    planName: b.customer.membership?.plan.name ?? "Membership",
+    servicesUsed: b.items.map((i) => i.service.name),
+  }));
 
   const ti = Number(todayIncomeAgg._sum.totalAmount ?? 0);
   const te = Number(todayExpAgg._sum.amount ?? 0);
@@ -149,6 +165,7 @@ export default async function DashboardPage() {
         totalCustomers,
         labourIncome,
         todayMembershipActivity,
+        activeMemberships,
         todayBreakdown: toBreakdown(todayBreakdownRaw),
         monthlyBreakdown: toBreakdown(monthlyBreakdownRaw),
         last7Days,

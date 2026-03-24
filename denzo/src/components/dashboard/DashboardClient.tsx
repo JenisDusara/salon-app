@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { formatCurrency } from "@/lib/utils";
-import type { DashboardData, DayRevenue, PaymentBreakdown } from "@/types";
+import type { DashboardData, DashboardMembership, DayRevenue, PaymentBreakdown } from "@/types";
 
 // ─────────────────────────────────────────────────────────────
 // Payment donut
@@ -494,55 +494,80 @@ export function DashboardClient({ data }: { data: DashboardData }) {
             )}
           </div>
 
-          {/* Today's Membership Activity */}
+          {/* Memberships */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-50 flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center">
-                <CreditCard size={14} className="text-violet-500" />
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center">
+                  <CreditCard size={14} className="text-indigo-500" />
+                </div>
+                <div>
+                  <p className="text-[13px] font-bold text-slate-700">Memberships</p>
+                  <p className="text-[10px] text-slate-400">{data.activeMemberships.filter(m => m.isActive && !m.isExpired).length} active · {data.activeMemberships.length} total</p>
+                </div>
               </div>
-              <div className="flex-1">
-                <p className="text-[13px] font-bold text-slate-700">Membership Activity</p>
-                <p className="text-[10px] text-slate-400">Today's visits</p>
-              </div>
-              {data.todayMembershipActivity.length > 0 && (
-                <span className="text-[10px] font-bold bg-violet-50 text-violet-600 border border-violet-100 px-2 py-0.5 rounded-full">
-                  {data.todayMembershipActivity.length} visits
-                </span>
-              )}
+              <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">
+                {formatCurrency(data.activeMemberships.reduce((s, m) => s + m.balance, 0))}
+              </span>
             </div>
 
-            {data.todayMembershipActivity.length === 0 ? (
+            {data.activeMemberships.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <CreditCard size={28} className="text-slate-200 mb-2" />
-                <p className="text-[12px] text-slate-400">No membership visits today</p>
+                <CreditCard size={26} className="text-slate-200 mb-2" />
+                <p className="text-[12px] text-slate-400">No memberships yet</p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-50 max-h-[360px] overflow-y-auto">
-                {data.todayMembershipActivity.map((act, idx) => {
-                  const avatarColors = ["#6366f1", "#8b5cf6", "#10b981", "#f59e0b", "#f43f5e", "#06b6d4", "#ec4899"];
-                  const bg = avatarColors[idx % avatarColors.length];
+              <div className="divide-y divide-slate-50 max-h-[380px] overflow-y-auto">
+                {data.activeMemberships.map((m, idx) => {
+                  const avatarColors = ["#6366f1","#8b5cf6","#10b981","#f59e0b","#f43f5e","#06b6d4","#ec4899"];
+                  const pct = m.totalBalance > 0 ? Math.round((m.balance / m.totalBalance) * 100) : 0;
+                  const expiry = new Date(m.expiryDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+                  const isOk = m.isActive && !m.isExpired;
+                  const statusColor = m.isExpired ? "#ef4444" : m.isActive ? "#10b981" : "#f59e0b";
+                  const statusLabel = m.isExpired ? "Expired" : m.isActive ? "Active" : "Inactive";
+                  const barColor = m.isExpired ? "#ef4444" : pct < 20 ? "#f59e0b" : "#6366f1";
+
                   return (
-                    <motion.div key={`${act.customerName}-${idx}`}
-                      initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }}
+                    <motion.div key={m.id}
+                      initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2, delay: idx * 0.05 }}
-                      className="flex items-start gap-3 px-5 py-3.5 hover:bg-slate-50/60 transition-colors"
+                      className="px-5 py-3.5 hover:bg-slate-50/60 transition-colors"
                     >
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-extrabold text-white flex-shrink-0 mt-0.5"
-                        style={{ background: bg }}>
-                        {act.customerName.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2 mb-1">
-                          <p className="text-[13px] font-semibold text-slate-800 truncate">{act.customerName}</p>
-                          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
-                            style={{ background: "#f3e8ff", color: "#7c3aed" }}>
-                            {act.planName}
-                          </span>
+                      <div className="flex items-center gap-3">
+                        {/* Avatar */}
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-extrabold text-white flex-shrink-0"
+                          style={{ background: avatarColors[idx % avatarColors.length] }}>
+                          {m.customerName.charAt(0).toUpperCase()}
                         </div>
-                        <div className="flex flex-wrap gap-1">
-                          {act.servicesUsed.map((svc, i) => (
-                            <span key={i} className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md font-medium">{svc}</span>
-                          ))}
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <p className="text-[13px] font-semibold text-slate-800 truncate">{m.customerName}</p>
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md flex-shrink-0" style={{ background: "#ede9fe", color: "#7c3aed" }}>{m.planName}</span>
+                            </div>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <span className="w-1.5 h-1.5 rounded-full" style={{ background: statusColor }} />
+                              <span className="text-[10px] font-semibold" style={{ color: statusColor }}>{statusLabel}</span>
+                            </div>
+                          </div>
+
+                          {/* Balance row */}
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-1.5 rounded-full overflow-hidden bg-slate-100">
+                              <motion.div className="h-full rounded-full"
+                                style={{ background: barColor }}
+                                initial={{ width: 0 }} animate={{ width: `${pct}%` }}
+                                transition={{ duration: 0.8, delay: idx * 0.07, ease: "easeOut" }}
+                              />
+                            </div>
+                            <span className="text-[11px] font-bold text-slate-700 flex-shrink-0">{formatCurrency(m.balance)}</span>
+                          </div>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <span className="text-[9px] text-slate-400">{pct}% remaining</span>
+                            <span className="text-[9px] text-slate-400">Exp: {expiry}</span>
+                          </div>
                         </div>
                       </div>
                     </motion.div>

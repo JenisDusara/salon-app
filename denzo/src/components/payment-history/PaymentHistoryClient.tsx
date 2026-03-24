@@ -74,6 +74,7 @@ export function PaymentHistoryClient({ bills }: { bills: Bill[] }) {
               <button
                 key={mode}
                 type="button"
+                suppressHydrationWarning
                 onClick={() => setActiveMode(mode)}
                 className={`rounded-xl border p-3 text-left transition-all ${
                   activeMode === mode
@@ -113,6 +114,7 @@ export function PaymentHistoryClient({ bills }: { bills: Bill[] }) {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search name or phone..."
+                suppressHydrationWarning
                 className="w-full h-9 pl-8 pr-3 rounded-lg border border-slate-200 bg-slate-50 text-[12px] text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
@@ -124,6 +126,7 @@ export function PaymentHistoryClient({ bills }: { bills: Bill[] }) {
               <button
                 key={mode}
                 type="button"
+                suppressHydrationWarning
                 onClick={() => setActiveMode(mode)}
                 className={`flex-shrink-0 px-3 py-1 rounded-lg text-[12px] font-semibold border transition-colors ${
                   activeMode === mode

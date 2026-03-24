@@ -94,6 +94,17 @@ export interface MembershipActivity {
   servicesUsed: string[];
 }
 
+export interface DashboardMembership {
+  id: number;
+  customerName: string;
+  planName: string;
+  expiryDate: string;
+  balance: number;
+  totalBalance: number;
+  isActive: boolean;
+  isExpired: boolean;
+}
+
 export interface PeriodStats {
   income: number;
   expenses: number;
@@ -120,6 +131,7 @@ export interface DashboardData {
   totalCustomers: number;
   labourIncome: LabourIncome[];
   todayMembershipActivity: MembershipActivity[];
+  activeMemberships: DashboardMembership[];
   todayBreakdown: PaymentBreakdown;
   monthlyBreakdown: PaymentBreakdown;
   last7Days: DayRevenue[];
