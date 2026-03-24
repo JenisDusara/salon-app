@@ -254,14 +254,14 @@ export function MembershipsClient({
     <PageTransition>
       <div className="space-y-5">
         {/* Tab switcher */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1 bg-white rounded-xl p-1 shadow-sm border border-slate-100">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center gap-1 bg-white rounded-xl p-1 shadow-sm border border-slate-100 w-full sm:w-auto">
             {(["memberships", "plans"] as const).map((tab) => (
               <button
                 key={tab}
                 type="button"
                 onClick={() => setActiveTab(tab)}
-                className="relative px-5 py-1.5 text-[13px] font-medium rounded-lg transition-colors focus-visible:outline-none"
+                className="relative flex-1 sm:flex-none px-4 py-1.5 text-[13px] font-medium rounded-lg transition-colors focus-visible:outline-none"
                 style={{ color: activeTab === tab ? "#4f46e5" : "#64748b" }}
               >
                 {activeTab === tab && (
@@ -271,11 +271,11 @@ export function MembershipsClient({
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}
-                <span className="relative z-10 flex items-center gap-1.5">
+                <span className="relative z-10 flex items-center justify-center gap-1.5">
                   {tab === "memberships" ? (
-                    <><Wallet size={13} />Active Memberships</>
+                    <><Wallet size={13} /><span className="hidden xs:inline">Active </span>Memberships</>
                   ) : (
-                    <><Settings size={13} />Manage Plans</>
+                    <><Settings size={13} />Plans</>
                   )}
                   <span className="bg-white border border-slate-200 text-slate-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                     {tab === "memberships" ? memberships.length : plans.length}
@@ -288,9 +288,10 @@ export function MembershipsClient({
             variant="primary"
             size="md"
             onClick={activeTab === "memberships" ? openAssign : openAddPlan}
+            className="w-full sm:w-auto"
           >
             <Plus size={15} />
-            {activeTab === "memberships" ? "Assign Membership" : "Create Plan"}
+            {activeTab === "memberships" ? "Assign" : "Create Plan"}
           </Button>
         </div>
 

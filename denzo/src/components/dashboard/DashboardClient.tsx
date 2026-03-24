@@ -177,17 +177,17 @@ function KpiCard({ label, value, icon, accentColor, lightColor, isCurrency = tru
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 8, scale: 0.97 }}
       transition={{ duration: 0.4, delay, ease: [0.22, 1, 0.36, 1] }}
-      className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 relative overflow-hidden"
+      className="bg-white rounded-2xl p-3 sm:p-5 shadow-sm border border-slate-100 relative overflow-hidden"
     >
       <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full opacity-[0.08]" style={{ background: accentColor }} />
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">{label}</p>
-          <p className="text-[24px] sm:text-[26px] font-extrabold text-slate-800 leading-none truncate">
+          <p className="text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 truncate">{label}</p>
+          <p className="text-[16px] sm:text-[24px] font-extrabold text-slate-800 leading-none truncate">
             {isCurrency ? formatCurrency(value) : value.toLocaleString("en-IN")}
           </p>
         </div>
-        <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+        <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0"
           style={{ background: lightColor, color: accentColor }}>
           {icon}
         </div>

@@ -65,7 +65,7 @@ export function PaymentHistoryClient({ bills }: { bills: Bill[] }) {
       <div className="space-y-4">
 
         {/* Summary cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3">
           {(["All", "Cash", "Card", "Online", "Membership"] as const).map((mode) => {
             const key = mode.toLowerCase() as keyof typeof totals;
             const count = mode === "All" ? bills.length : bills.filter((b) => b.paymentMode === mode.toLowerCase()).length;
@@ -76,19 +76,19 @@ export function PaymentHistoryClient({ bills }: { bills: Bill[] }) {
                 type="button"
                 suppressHydrationWarning
                 onClick={() => setActiveMode(mode)}
-                className={`rounded-xl border p-3 text-left transition-all ${
+                className={`rounded-xl border p-2.5 text-left transition-all ${
                   activeMode === mode
                     ? "border-indigo-300 bg-indigo-50 shadow-sm"
                     : "border-slate-100 bg-white hover:border-indigo-200"
                 }`}
               >
-                <p className="text-[10px] font-semibold text-slate-500 mb-1 truncate">
+                <p className="text-[9px] sm:text-[10px] font-semibold text-slate-500 mb-1 truncate">
                   {cfg ? cfg.label : "🧾 All"}
                 </p>
-                <p className="text-[15px] sm:text-[18px] font-bold text-slate-800">
+                <p className="text-[13px] sm:text-[17px] font-bold text-slate-800 truncate">
                   ₹{totals[key].toLocaleString("en-IN")}
                 </p>
-                <p className="text-[10px] text-slate-400 mt-0.5">{count} bills</p>
+                <p className="text-[9px] sm:text-[10px] text-slate-400 mt-0.5">{count} bills</p>
               </button>
             );
           })}
