@@ -124,6 +124,12 @@ export interface DayRevenue {
   expenses: number;
 }
 
+export interface ServiceRevenue {
+  serviceName: string;
+  totalAmount: number;
+  count: number;
+}
+
 export interface DashboardData {
   today: PeriodStats;
   monthly: PeriodStats;
@@ -135,6 +141,7 @@ export interface DashboardData {
   todayBreakdown: PaymentBreakdown;
   monthlyBreakdown: PaymentBreakdown;
   last7Days: DayRevenue[];
+  serviceRevenue: ServiceRevenue[];
 }
 
 export interface SmsCampaign {

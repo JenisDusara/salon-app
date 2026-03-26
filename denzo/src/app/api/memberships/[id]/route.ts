@@ -52,10 +52,14 @@ export async function PUT(
   if (Number.isNaN(numId))
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
 
-  const { planId, balance } = await request.json();
+  const { planId, balance, isActive } = await request.json();
 
   try {
     let updateData: Record<string, unknown> = {};
+
+    if (isActive !== undefined) {
+      updateData.isActive = isActive;
+    }
 
     if (planId !== undefined) {
       const plan = await prisma.membershipPlan.findUnique({ where: { id: planId } });

@@ -51,6 +51,13 @@ export default async function DashboardPage() {
     _sum: { price: true },
     _count: { id: true },
   });
+  const serviceGrouped    = await prisma.billItem.groupBy({
+    by: ["serviceId"],
+    _sum: { price: true },
+    _count: { id: true },
+    orderBy: { _sum: { price: "desc" } },
+  });
+  const allServices       = await prisma.service.findMany({ select: { id: true, name: true } });
 
   // Process last 7 days in JS
   const last7Days = last7Ranges.map(({ start, end, label }) => ({
@@ -98,6 +105,15 @@ export default async function DashboardPage() {
   const oi = Number(totalIncomeAgg._sum.totalAmount ?? 0);
   const oe = Number(totalExpAgg._sum.amount ?? 0);
 
+  const serviceRevenue = serviceGrouped.map((row) => {
+    const svc = allServices.find((s) => s.id === row.serviceId);
+    return {
+      serviceName: svc?.name ?? "Unknown",
+      totalAmount: Number(row._sum.price ?? 0),
+      count: row._count.id,
+    };
+  });
+
   return (
     <DashboardClient
       data={{
@@ -111,6 +127,7 @@ export default async function DashboardPage() {
         todayBreakdown:   toBreakdown(todayBreakdownRaw),
         monthlyBreakdown: toBreakdown(monthlyBreakdownRaw),
         last7Days,
+        serviceRevenue,
       }}
     />
   );

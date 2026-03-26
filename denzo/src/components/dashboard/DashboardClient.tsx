@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   BarChart2, Calculator,
   ChevronDown, CreditCard, Download, Scissors,
-  TrendingDown, TrendingUp, Trophy, Users,
+  TrendingDown, TrendingUp, Trophy, Users, Sparkles,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -204,6 +204,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
   const [activeTab, setActiveTab] = useState<"today" | "monthly">("today");
   const [exporting, setExporting] = useState(false);
   const [calcOpen, setCalcOpen] = useState(false);
+  const [svcOpen, setSvcOpen] = useState(false);
   const [selectedDayIndex, setSelectedDayIndex] = useState<number | null>(null);
   const [profitStart, setProfitStart] = useState("");
   const [profitEnd, setProfitEnd] = useState("");
@@ -578,6 +579,92 @@ export function DashboardClient({ data }: { data: DashboardData }) {
           </div>
         </div>
 
+        {/* ── SERVICE REVENUE + PROFIT CALCULATOR ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+
+        {/* Service Revenue */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <button type="button" suppressHydrationWarning
+            onClick={() => setSvcOpen(!svcOpen)}
+            className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50/60 transition-colors group"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-pink-50 flex items-center justify-center transition-colors group-hover:bg-pink-100">
+                <Sparkles size={14} className="text-pink-500" />
+              </div>
+              <div className="text-left">
+                <p className="text-[13px] font-bold text-slate-700">Service Revenue</p>
+                <p className="text-[10px] text-slate-400">All-time earnings per service</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold text-pink-600 bg-pink-50 px-2.5 py-1 rounded-lg">
+                {data.serviceRevenue.length} services
+              </span>
+              <motion.div animate={{ rotate: svcOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                <ChevronDown size={15} className="text-slate-400" />
+              </motion.div>
+            </div>
+          </button>
+
+          <AnimatePresence>
+            {svcOpen && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25, ease: "easeInOut" }}
+                className="overflow-hidden"
+              >
+                <div className="border-t border-slate-100">
+                  {data.serviceRevenue.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <Sparkles size={26} className="text-slate-200 mb-2" />
+                      <p className="text-[12px] text-slate-400">No service data yet</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-slate-50">
+                      {(() => {
+                        const maxAmt = data.serviceRevenue[0]?.totalAmount || 1;
+                        const colors = ["#f43f5e","#f97316","#f59e0b","#10b981","#06b6d4","#6366f1","#8b5cf6","#ec4899"];
+                        return data.serviceRevenue.map((svc, idx) => {
+                          const pct = Math.round((svc.totalAmount / maxAmt) * 100);
+                          const color = colors[idx % colors.length];
+                          return (
+                            <motion.div key={svc.serviceName}
+                              initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                              transition={{ duration: 0.25, delay: idx * 0.04 }}
+                              className="flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50/60 transition-colors"
+                            >
+                              <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-extrabold text-white flex-shrink-0"
+                                style={{ background: color }}>
+                                {idx + 1}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <p className="text-[13px] font-semibold text-slate-700 truncate">{svc.serviceName}</p>
+                                  <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                                    <span className="text-[10px] text-slate-400">{svc.count} times</span>
+                                    <p className="text-[13px] font-extrabold text-slate-800">{formatCurrency(svc.totalAmount)}</p>
+                                  </div>
+                                </div>
+                                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                  <motion.div className="h-full rounded-full"
+                                    style={{ background: color }}
+                                    initial={{ width: 0 }} animate={{ width: `${pct}%` }}
+                                    transition={{ duration: 0.8, delay: idx * 0.06 + 0.2, ease: "easeOut" }}
+                                  />
+                                </div>
+                              </div>
+                            </motion.div>
+                          );
+                        });
+                      })()}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
         {/* ── PROFIT CALCULATOR ── */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <button type="button" suppressHydrationWarning
@@ -658,6 +745,8 @@ export function DashboardClient({ data }: { data: DashboardData }) {
             )}
           </AnimatePresence>
         </div>
+
+        </div>{/* end grid: service revenue + profit calculator */}
 
       </div>
     </PageTransition>

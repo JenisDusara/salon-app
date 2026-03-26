@@ -69,34 +69,9 @@ export function MembershipsClient({
 
   // Edit membership
   const [editMembership, setEditMembership] = useState<Membership | null>(null);
-  const [editMemForm, setEditMemForm] = useState({ planId: "", balance: "" });
 
   function openEditMembership(m: Membership) {
     setEditMembership(m);
-    setEditMemForm({ planId: String(m.planId), balance: String(m.balance) });
-  }
-
-  async function handleUpdateMembership() {
-    if (!editMembership) return;
-    setSaving(true);
-    try {
-      const res = await fetch(`/api/memberships/${editMembership.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          planId: parseInt(editMemForm.planId, 10),
-          balance: Number(editMemForm.balance),
-        }),
-      });
-      if (!res.ok) throw new Error();
-      toast.success("Membership updated");
-      setEditMembership(null);
-      router.refresh();
-    } catch {
-      toast.error("Update failed");
-    } finally {
-      setSaving(false);
-    }
   }
 
   async function handleDeletePlan(id: number, name: string) {
@@ -117,6 +92,23 @@ export function MembershipsClient({
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Delete failed");
+    }
+  }
+
+  async function handleToggleMembership(id: number, currentStatus: boolean) {
+    const newStatus = !currentStatus;
+    try {
+      const res = await fetch(`/api/memberships/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: newStatus }),
+      });
+      if (!res.ok) throw new Error();
+      setMemberships((prev) => prev.map((m) => m.id === id ? { ...m, isActive: newStatus } : m));
+      setEditMembership((prev) => prev && prev.id === id ? { ...prev, isActive: newStatus } : prev);
+      toast.success(newStatus ? "Membership activated" : "Membership deactivated");
+    } catch {
+      toast.error("Failed to update status");
     }
   }
 
@@ -350,8 +342,8 @@ export function MembershipsClient({
                               </div>
                             </div>
                             <div className="flex items-center gap-1.5">
-                              <Badge variant={m.isExpired ? "expired" : "active"}>
-                                {m.isExpired ? "Expired" : "Active"}
+                              <Badge variant={m.isExpired ? "expired" : m.isActive ? "active" : "inactive"}>
+                                {m.isExpired ? "Expired" : m.isActive ? "Active" : "Inactive"}
                               </Badge>
                               <button
                                 type="button"
@@ -621,35 +613,26 @@ export function MembershipsClient({
       <Modal isOpen={!!editMembership} onClose={() => setEditMembership(null)} title="Edit Membership" size="sm">
         <div className="space-y-4">
           <div>
-            <label className="text-[12px] font-medium text-slate-600 mb-1.5 block">Change Plan</label>
-            <select
-              value={editMemForm.planId}
-              onChange={(e) => {
-                const p = plans.find((pl) => pl.id === parseInt(e.target.value, 10));
-                const newBal = p ? p.price * (1 + p.bonusPercent / 100) : Number(editMemForm.balance);
-                setEditMemForm({ planId: e.target.value, balance: String(newBal) });
-              }}
-              className="w-full h-9 rounded-lg border border-slate-200 bg-slate-50 px-3 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="">Select plan</option>
-              {plans.filter((p) => p.isActive).map((p) => (
-                <option key={p.id} value={p.id}>{p.name} — {formatCurrency(p.price)}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-[12px] font-medium text-slate-600 mb-1.5 block">Current Balance (₹)</label>
-            <input
-              type="number"
-              value={editMemForm.balance}
-              onChange={(e) => setEditMemForm({ ...editMemForm, balance: e.target.value })}
-              min="0"
-              className="w-full h-9 rounded-lg border border-slate-200 bg-slate-50 px-3 text-[13px] focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
+            <label className="text-[12px] font-medium text-slate-600 mb-1.5 block">Status</label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => editMembership && handleToggleMembership(editMembership.id, false)}
+                className={`flex-1 py-2 rounded-lg text-[13px] font-semibold border transition-colors ${editMembership?.isActive ? "bg-emerald-50 border-emerald-300 text-emerald-700" : "bg-slate-50 border-slate-200 text-slate-400"}`}
+              >
+                Active
+              </button>
+              <button
+                type="button"
+                onClick={() => editMembership && handleToggleMembership(editMembership.id, true)}
+                className={`flex-1 py-2 rounded-lg text-[13px] font-semibold border transition-colors ${!editMembership?.isActive ? "bg-rose-50 border-rose-300 text-rose-600" : "bg-slate-50 border-slate-200 text-slate-400"}`}
+              >
+                Inactive
+              </button>
+            </div>
           </div>
           <div className="flex gap-2 pt-2">
-            <Button variant="ghost" size="md" className="flex-1" onClick={() => setEditMembership(null)}>Cancel</Button>
-            <Button variant="primary" size="md" className="flex-1" onClick={handleUpdateMembership} loading={saving}>Save</Button>
+            <Button variant="ghost" size="md" className="flex-1" onClick={() => setEditMembership(null)}>Close</Button>
           </div>
         </div>
       </Modal>
