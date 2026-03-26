@@ -6,6 +6,7 @@ export interface Customer {
   createdAt: string;
   totalVisits: number;
   membershipBalance?: number;
+  membershipPlanName?: string;
 }
 
 export interface Employee {

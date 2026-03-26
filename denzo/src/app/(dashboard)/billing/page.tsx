@@ -23,7 +23,7 @@ export default async function BillingPage() {
       include: {
         membership: {
           where: { isActive: true },
-          select: { balance: true, expiryDate: true },
+          select: { balance: true, expiryDate: true, plan: { select: { name: true } } },
         },
       },
     }),
@@ -72,6 +72,7 @@ export default async function BillingPage() {
           createdAt: c.createdAt.toISOString(),
           totalVisits: 0,
           membershipBalance: hasActiveMembership ? Number(mem.balance) : undefined,
+          membershipPlanName: hasActiveMembership ? (mem.plan?.name ?? undefined) : undefined,
         };
       })}
     />

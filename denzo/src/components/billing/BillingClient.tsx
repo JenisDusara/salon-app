@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ChevronDown, MessageSquare, Phone, Plus, Receipt, UserPlus, Wallet, X } from "lucide-react";
+import { ChevronDown, FileText, MessageSquare, Phone, Plus, Receipt, UserPlus, Wallet, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -9,8 +9,26 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageTransition } from "@/components/ui/PageTransition";
+import { InvoiceModal } from "@/components/billing/InvoiceModal";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Bill, Customer, Employee, Service } from "@/types";
+
+interface InvoiceBill {
+  id: number;
+  date: string;
+  totalAmount: number;
+  paymentMode: string;
+  membershipBalance?: number;
+  membershipPlanName?: string;
+  customer: { id: number; name: string; phone: string };
+  items: {
+    id: number;
+    service: { id: number; name: string };
+    employee: { id: number; name: string };
+    price: number;
+    isMembershipService: boolean;
+  }[];
+}
 
 interface LineItem {
   _key: string;
@@ -52,6 +70,7 @@ export function BillingClient({
   const [paymentMode, setPaymentMode] = useState<"cash" | "card" | "online" | "membership" | null>(null);
   const [useMembership, setUseMembership] = useState(false);
   const [sendSms, setSendSms] = useState(false);
+  const [invoiceBill, setInvoiceBill] = useState<InvoiceBill | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Filter suggestions by phone
@@ -144,6 +163,32 @@ export function BillingClient({
     );
   }
 
+  function openBillInvoice(bill: Bill) {
+    const customer = allCustomers.find((c) => c.id === bill.customerId);
+    setInvoiceBill({
+      id: bill.id,
+      date: bill.date,
+      totalAmount: bill.totalAmount,
+      paymentMode: bill.paymentMode,
+      membershipBalance:
+        bill.paymentMode === "membership" ? customer?.membershipBalance : undefined,
+      membershipPlanName:
+        bill.paymentMode === "membership" ? customer?.membershipPlanName : undefined,
+      customer: {
+        id: bill.customerId,
+        name: bill.customerName ?? "Customer",
+        phone: customer?.phone ?? "",
+      },
+      items: bill.items.map((i) => ({
+        id: i.id,
+        service: { id: i.serviceId, name: i.serviceName ?? "" },
+        employee: { id: i.employeeId, name: i.employeeName ?? "" },
+        price: i.price,
+        isMembershipService: i.isMembershipService,
+      })),
+    });
+  }
+
   const total = lineItems.reduce((sum, i) => sum + (Number(i.price) || 0), 0);
   const isValid =
     (selectedCustomer ||
@@ -201,6 +246,16 @@ export function BillingClient({
 
       toast.success(sendSms ? "Bill created! SMS sent ✓" : "Bill created!");
       setBills((prev) => [newBill, ...prev.slice(0, 14)]);
+      // For membership bills, compute remaining balance after deduction
+      const remainingBalance =
+        paymentMode === "membership" && selectedCustomer?.membershipBalance !== undefined
+          ? Math.max(0, selectedCustomer.membershipBalance - newBill.totalAmount)
+          : undefined;
+      setInvoiceBill({
+        ...newBill,
+        membershipBalance: remainingBalance,
+        membershipPlanName: paymentMode === "membership" ? selectedCustomer?.membershipPlanName : undefined,
+      });
 
       // Reset form
       clearCustomer();
@@ -629,9 +684,19 @@ export function BillingClient({
                         {formatDate(bill.date)}
                       </p>
                     </div>
-                    <p className="text-[14px] font-bold text-slate-800">
-                      {formatCurrency(bill.totalAmount)}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-[14px] font-bold text-slate-800">
+                        {formatCurrency(bill.totalAmount)}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => openBillInvoice(bill)}
+                        title="View Invoice"
+                        className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                      >
+                        <FileText size={14} />
+                      </button>
+                    </div>
                   </div>
                   <div className="space-y-1">
                     {bill.items.map((item) => (
@@ -665,6 +730,10 @@ export function BillingClient({
           </div>
         </div>
       </div>
+      <InvoiceModal
+        bill={invoiceBill}
+        onClose={() => setInvoiceBill(null)}
+      />
     </PageTransition>
   );
 }
